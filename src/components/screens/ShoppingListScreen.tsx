@@ -1,0 +1,353 @@
+import { useState, useRef } from 'react';
+import { Plus, Check, Trash2, ShoppingBag, Package } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Checkbox } from '../ui/checkbox';
+import { demoProducts, demoScanHistory } from '../../lib/demo-data';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../ui/dialog';
+import { Badge } from '../ui/badge';
+import { ImageWithFallback } from '../figma/ImageWithFallback';
+
+interface ShoppingListItem {
+  id: string;
+  name: string;
+  checked: boolean;
+  productId?: string;
+  image?: string;
+  brand?: string;
+}
+
+interface ShoppingListScreenProps {
+  onNavigate: (screen: string, data?: any) => void;
+}
+
+export function ShoppingListScreen({ onNavigate }: ShoppingListScreenProps) {
+  const [items, setItems] = useState<ShoppingListItem[]>([
+    { id: '1', name: 'Organic Almond Milk', checked: false, productId: '1', image: demoProducts[0].image, brand: 'Nature\'s Best' },
+    { id: '2', name: 'Greek Yogurt', checked: true, productId: '4', image: demoProducts[3].image, brand: 'Dairy Fresh' },
+    { id: '3', name: 'Fresh Spinach', checked: false },
+    { id: '4', name: 'Whole Wheat Bread', checked: false },
+  ]);
+  const [newItemName, setNewItemName] = useState('');
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [swipedItem, setSwipedItem] = useState<string | null>(null);
+  const touchStartX = useRef<number>(0);
+  const touchCurrentX = useRef<number>(0);
+
+  const handleAddItem = () => {
+    if (newItemName.trim()) {
+      const newItem: ShoppingListItem = {
+        id: Date.now().toString(),
+        name: newItemName.trim(),
+        checked: false,
+      };
+      setItems([...items, newItem]);
+      setNewItemName('');
+    }
+  };
+
+  const handleToggleItem = (id: string) => {
+    setItems(items.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
+    setSwipedItem(null);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, id: string) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, id: string) => {
+    touchCurrentX.current = e.touches[0].clientX;
+    const diff = touchStartX.current - touchCurrentX.current;
+    
+    if (diff > 50) {
+      setSwipedItem(id);
+    } else if (diff < -50) {
+      setSwipedItem(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartX.current = 0;
+    touchCurrentX.current = 0;
+  };
+
+  const handleAddScannedProduct = (product: typeof demoProducts[0]) => {
+    const newItem: ShoppingListItem = {
+      id: Date.now().toString(),
+      name: product.name,
+      checked: false,
+      productId: product.id,
+      image: product.image,
+      brand: product.brand,
+    };
+    setItems([...items, newItem]);
+    setShowAddDialog(false);
+  };
+
+  const uncheckedItems = items.filter(item => !item.checked);
+  const checkedItems = items.filter(item => item.checked);
+
+  return (
+    <div className="min-h-screen bg-[#F8F9FA] pb-24">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 pt-10 pb-6 sticky top-0 z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5 text-[#22C55E]" />
+            </div>
+            <div className="flex-1">
+              <h1>Shopping List</h1>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {uncheckedItems.length} items to buy
+          </p>
+        </div>
+
+        {/* Quick Add */}
+        <div className="px-6 py-6 bg-white border-b border-gray-200">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add item..."
+              value={newItemName}
+              onChange={(e) => setNewItemName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddItem()}
+              className="flex-1 h-12 bg-[#F8F9FA] rounded-2xl border-gray-200"
+            />
+            <Button
+              onClick={handleAddItem}
+              disabled={!newItemName.trim()}
+              className="h-12 w-12 p-0 bg-[#22C55E] hover:bg-[#22C55E]/90 rounded-2xl"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+          </div>
+
+          <div className="mt-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowAddDialog(true)}
+              className="w-full h-10 rounded-xl text-sm"
+            >
+              <Package className="w-4 h-4 mr-2" />
+              Add from Scan History
+            </Button>
+          </div>
+        </div>
+
+        {/* Shopping List */}
+        <div className="px-6 py-6">
+          {items.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <ShoppingBag className="w-10 h-10 text-gray-400" />
+              </div>
+              <h3 className="mb-2">Your list is empty</h3>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                Add products to start building your shopping list
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Unchecked Items */}
+              {uncheckedItems.length > 0 && (
+                <div>
+                  <h3 className="mb-3">To Buy</h3>
+                  <div className="space-y-2">
+                    {uncheckedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative overflow-hidden rounded-2xl"
+                      >
+                        {/* Delete background (revealed on swipe) */}
+                        <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
+                          <Trash2 className="w-6 h-6 text-white" />
+                        </div>
+                        
+                        {/* Main content (swipeable) */}
+                        <div
+                          onTouchStart={(e) => handleTouchStart(e, item.id)}
+                          onTouchMove={(e) => handleTouchMove(e, item.id)}
+                          onTouchEnd={handleTouchEnd}
+                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200"
+                          style={{
+                            transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
+                          }}
+                        >
+                          <Checkbox
+                            checked={item.checked}
+                            onCheckedChange={() => handleToggleItem(item.id)}
+                            className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+                          />
+                          
+                          {item.image ? (
+                            <ImageWithFallback
+                              src={item.image}
+                              alt={item.name}
+                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Package className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0">
+                            {item.brand && (
+                              <p className="text-xs text-muted-foreground">{item.brand}</p>
+                            )}
+                            <p className="truncate">{item.name}</p>
+                          </div>
+                        </div>
+
+                        {/* Delete button (shown when swiped) */}
+                        {swipedItem === item.id && (
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center"
+                          >
+                            <Trash2 className="w-6 h-6 text-white" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Checked Items */}
+              {checkedItems.length > 0 && (
+                <div>
+                  <h3 className="mb-3 text-muted-foreground">Completed ({checkedItems.length})</h3>
+                  <div className="space-y-2">
+                    {checkedItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative overflow-hidden rounded-2xl opacity-60"
+                      >
+                        {/* Delete background (revealed on swipe) */}
+                        <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
+                          <Trash2 className="w-6 h-6 text-white" />
+                        </div>
+                        
+                        {/* Main content (swipeable) */}
+                        <div
+                          onTouchStart={(e) => handleTouchStart(e, item.id)}
+                          onTouchMove={(e) => handleTouchMove(e, item.id)}
+                          onTouchEnd={handleTouchEnd}
+                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200"
+                          style={{
+                            transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
+                          }}
+                        >
+                          <Checkbox
+                            checked={item.checked}
+                            onCheckedChange={() => handleToggleItem(item.id)}
+                            className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+                          />
+                          
+                          {item.image ? (
+                            <ImageWithFallback
+                              src={item.image}
+                              alt={item.name}
+                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Package className="w-6 h-6 text-gray-400" />
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0">
+                            {item.brand && (
+                              <p className="text-xs text-muted-foreground line-through">{item.brand}</p>
+                            )}
+                            <p className="truncate line-through">{item.name}</p>
+                          </div>
+                        </div>
+
+                        {/* Delete button (shown when swiped) */}
+                        {swipedItem === item.id && (
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center"
+                          >
+                            <Trash2 className="w-6 h-6 text-white" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Clear completed */}
+        {checkedItems.length > 0 && (
+          <div className="px-6 pb-6">
+            <Button
+              variant="outline"
+              onClick={() => setItems(uncheckedItems)}
+              className="w-full h-12 rounded-2xl border-gray-200 text-[#EF4444] hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear Completed Items
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Add from history dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add from History</DialogTitle>
+            <DialogDescription>
+              Choose products from your scan history
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 mt-4">
+            {demoScanHistory.map((historyItem) => (
+              <button
+                key={historyItem.id}
+                onClick={() => handleAddScannedProduct(historyItem.product)}
+                className="w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all text-left"
+              >
+                <div className="flex items-center gap-3 p-3">
+                  <ImageWithFallback
+                    src={historyItem.product.image}
+                    alt={historyItem.product.name}
+                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground">{historyItem.product.brand}</p>
+                    <p className="text-sm mt-0.5 truncate">{historyItem.product.name}</p>
+                    <Badge variant="secondary" className="mt-1 text-xs">
+                      {historyItem.product.category}
+                    </Badge>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
