@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import MistralClient from '@mistralai/mistralai';
+import * as MistralAI from '@mistralai/mistralai';
 import type { Product, User } from '@/lib/types';
 import { ALL_PRODUCTS } from '@/lib/data';
 
@@ -16,7 +16,7 @@ if (!apiKey) {
   console.error("Mistral API key is not set in environment variables.");
 }
 
-const client = new MistralClient(apiKey);
+const client = new MistralAI.MistralClient(apiKey);
 
 const buildPrompt = (product: Product, user: User): string => {
   const userAllergies = user.allergies.join(', ') || 'none';
