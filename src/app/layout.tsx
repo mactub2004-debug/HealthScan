@@ -1,8 +1,7 @@
-// src/app/layout.tsx
 'use client';
 
 import './globals.css';
-import { useEffect } from 'react';
+import { useEffect, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { UserDataProvider, useUserData } from '@/contexts/user-data-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -11,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 
 const AUTH_ROUTES = ['/login', '/signup', '/onboarding'];
 
-function AppContent({ children }: { children: React.ReactNode }) {
+function AppContent({ children }: { children: ReactNode }) {
   const { user, isLoading } = useUserData();
   const router = useRouter();
   const pathname = usePathname();
@@ -23,19 +22,23 @@ function AppContent({ children }: { children: React.ReactNode }) {
     
     const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route));
     
-    if (!user && !isAuthRoute) {
-      // Usuario no logueado Y no está en una página de auth -> redirigir a onboarding
+    // Si el perfil está incompleto, redirigir a onboarding, excepto si ya está en una ruta de autenticación.
+    if (user && !user.isProfileComplete && !isAuthRoute) {
       router.replace('/onboarding');
+      return;
     }
-    
-    if (user && isAuthRoute) {
-      // Usuario logueado Y está en una página de auth -> redirigir a la app
+
+    if (!user && !isAuthRoute) {
+      // Usuario no logueado Y no está en una página de auth -> redirigir a login
+      router.replace('/login');
+    } else if (user && user.isProfileComplete && isAuthRoute) {
+      // Usuario logueado con perfil completo Y está en una página de auth -> redirigir a la app
       router.replace('/');
     }
   }, [user, isLoading, pathname, router]);
 
-  if (isLoading) {
-    // Muestra el spinner DE ALTO NIVEL mientras se determina el estado de auth
+  if (isLoading || (!user && !AUTH_ROUTES.some(route => pathname.startsWith(route)))) {
+    // Muestra el spinner mientras se determina el estado de auth o si estamos redirigiendo.
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -54,11 +57,7 @@ function AppContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className="light">
       <head>
@@ -70,9 +69,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background">
         <UserDataProvider>
-          <AppContent>
-            {children}
-          </AppContent>
+          <AppContent>{children}</AppContent>
           <Toaster />
         </UserDataProvider>
       </body>

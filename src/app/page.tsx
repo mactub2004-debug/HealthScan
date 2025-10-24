@@ -1,6 +1,7 @@
-// src/app/page.tsx
+'use client';
+
+import HomePageClient from "@/components/home/home-page-client";
+
 export default function HomePage() {
-  // Esta página DEBE existir para que Next.js resuelva la ruta '/'.
-  // El layout.tsx redirigirá al usuario antes de que esto se muestre.
-  return null;
+  return <HomePageClient />;
 }

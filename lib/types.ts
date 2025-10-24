@@ -46,4 +46,5 @@ export type User = {
   healthGoals: string[];
   shoppingList: string[];
   scanHistory: string[];
+  onboardingComplete: boolean;
 };
