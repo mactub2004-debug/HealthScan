@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { Product, User } from '@/lib/types'; //
 import { ALL_PRODUCTS } from '@/lib/data'; //
 
+// ... (interface AnalysisResult, apiKey check, buildPrompt, parseAnalysisResult se mantienen igual) ...
 interface AnalysisResult {
   score: number;
   rating: string;
@@ -14,7 +15,6 @@ if (!apiKey) {
   console.error("Mistral API key is not set in environment variables.");
 }
 
-// ... (buildPrompt y parseAnalysisResult se mantienen igual) ...
 const buildPrompt = (product: Product, user: User): string => {
   const userAllergies = user.allergies.join(', ') || 'none'; //
   const userDiets = user.diet.join(', ') || 'none'; //
@@ -81,18 +81,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 }); //
     }
 
-    // --- Inicio de la Solución Correcta ---
-    // 1. Importar todo el módulo dinámicamente
+    // --- Inicio de la Solución Alternativa Explícita ---
+    // 1. Importar dinámicamente
     const MistralAIModule = await import('@mistralai/mistralai');
 
-    // 2. Acceder al objeto 'default' (la "caja de herramientas")
-    //    Usamos 'as any' para evitar problemas con los tipos declarados incorrectamente.
-    const MistralAI = MistralAIModule.default as any;
+    // 2. Acceder al objeto 'default'
+    const MistralAIDefaultObject = MistralAIModule.default;
 
-    // 3. Acceder a la propiedad 'MistralClient' DENTRO del objeto default
-    //    y AHORA SÍ usar 'new'.
-    const client = new MistralAI.MistralClient(apiKey);
-    // --- Fin de la Solución Correcta ---
+    // 3. Extraer la clase de la propiedad y aplicar 'as any' directamente a la clase extraída
+    const MistralClientClass = (MistralAIDefaultObject as any).MistralClient;
+
+    // 4. Instanciar usando la variable que contiene la clase (ahora con 'any')
+    const client = new MistralClientClass(apiKey);
+    // --- Fin de la Solución Alternativa Explícita ---
+
 
     const prompt = buildPrompt(product, user as User); //
 
