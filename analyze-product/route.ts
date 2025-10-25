@@ -1,6 +1,5 @@
-
 import { NextResponse } from 'next/server';
-import * as MistralAI from '@mistralai/mistralai';
+// Se elimina la importación estática de MistralClient aquí
 import type { Product, User } from '@/lib/types';
 import { ALL_PRODUCTS } from '@/lib/data';
 
@@ -16,16 +15,13 @@ if (!apiKey) {
   console.error("Mistral API key is not set in environment variables.");
 }
 
-const client = new MistralAI.MistralClient(apiKey);
+// Se elimina la instanciación global del cliente aquí
 
 const buildPrompt = (product: Product, user: User): string => {
   const userAllergies = user.allergies.join(', ') || 'none';
   const userDiets = user.diet.join(', ') || 'none';
   const userGoals = user.healthGoals.join(', ') || 'none';
 
-  // Prompt simplificado. Ya no le decimos CÓMO formatear el JSON,
-  // solo le decimos QUÉ queremos en el JSON.
-  // La opción `responseFormat` se encarga del resto.
   return `
     You are an expert nutritionist AI. Your task is to analyze a food product based on a user's profile and provide a clear, concise, and helpful analysis. You will output a JSON object with the fields "score", "rating", and "summary".
 
@@ -86,26 +82,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    // --- Inicio de la modificación ---
+    // Importación dinámica y creación del cliente dentro de la función POST
+    const { default: MistralClient } = await import('@mistralai/mistralai');
+    const client = new MistralClient(apiKey);
+    // --- Fin de la modificación ---
+
     const prompt = buildPrompt(product, user as User);
 
     const chatResponse = await client.chat({
       model: 'mistral-large-latest',
       messages: [{ role: 'user', content: prompt }],
-      // Esta línea es la que fuerza la salida JSON
       responseFormat: { type: 'json_object' }
     });
 
     const analysisText = chatResponse.choices[0].message.content;
-    
+
     if (!analysisText) {
         throw new Error("Received empty response from AI.");
     }
 
     const analysis = parseAnalysisResult(analysisText);
-    
+
     if (!analysis) {
-        return NextResponse.json({ 
-            error: "AI analysis could not be completed. The model returned an invalid format." 
+        return NextResponse.json({
+            error: "AI analysis could not be completed. The model returned an invalid format."
         }, { status: 500 });
     }
 
