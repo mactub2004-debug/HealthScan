@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-// Se elimina la importación estática de MistralClient aquí
-import type { Product, User } from '@/lib/types';
-import { ALL_PRODUCTS } from '@/lib/data';
+import type { Product, User } from '@/lib/types'; //
+import { ALL_PRODUCTS } from '@/lib/data'; //
 
 interface AnalysisResult {
   score: number;
@@ -15,110 +14,112 @@ if (!apiKey) {
   console.error("Mistral API key is not set in environment variables.");
 }
 
-// Se elimina la instanciación global del cliente aquí
-
+// ... (buildPrompt y parseAnalysisResult se mantienen igual) ...
 const buildPrompt = (product: Product, user: User): string => {
-  const userAllergies = user.allergies.join(', ') || 'none';
-  const userDiets = user.diet.join(', ') || 'none';
-  const userGoals = user.healthGoals.join(', ') || 'none';
+  const userAllergies = user.allergies.join(', ') || 'none'; //
+  const userDiets = user.diet.join(', ') || 'none'; //
+  const userGoals = user.healthGoals.join(', ') || 'none'; //
 
   return `
-          You are an expert nutritionist AI. Your task is to analyze a food product based on a user's profile and provide a clear, concise, and helpful analysis. You will output a JSON object with the fields "score", "rating", and "summary".
+    You are an expert nutritionist AI. Your task is to analyze a food product based on a user's profile and provide a clear, concise, and helpful analysis. You will output a JSON object with the fields "score", "rating", and "summary".
 
-          The user's profile is as follows:
-          - Allergies: ${userAllergies}
-          - Diets: ${userDiets}
-          - Health Goals: ${userGoals}
+    **User Profile:**
+    - **Allergies:** ${userAllergies}
+    - **Dietary Preferences:** ${userDiets}
+    - **Health Goals:** ${userGoals}
 
-          The product to analyze is "${product.name}", with the following ingredients: ${product.ingredients.join(', ')}.
+    **Product Information:**
+    - **Name:** ${product.name}
+    - **Brand:** ${product.brand}
+    - **Ingredients:** ${product.ingredients}
+    - **Tags:** ${product.tags.join(', ')}
+    - **Nutritional Metrics (per 100g):**
+      ${product.nutritionalInformation.metrics.map(m => `- ${m.name}: ${m.per100g}`).join('\n          ')}
 
-          Based on this information, provide:
-          1.  "score": A numerical score from 0 to 100, where 100 is perfectly aligned with the user's profile and 0 is completely misaligned. Consider allergies, dietary restrictions (like vegan, gluten-free), and health goals (like low-sugar, high-protein). A product containing a user's allergen should receive a score of 0.
-          2.  "rating": A one-word rating based on the score: "Excellent", "Good", "Average", "Poor", "Avoid".
-          3.  "summary": A brief, one or two-sentence summary explaining the score, mentioning the key positive or negative aspects of the product for this specific user.
-
-          Example for a user allergic to nuts analyzing a product with almonds:
-          {
-            "score": 0,
-            "rating": "Avoid",
-            "summary": "This product is not suitable as it contains almonds, which is one of your specified allergens."
-          }
-
-          Example for a vegan user analyzing a vegan, low-sugar product:
-          {
-            "score": 95,
-            "rating": "Excellent",
-            "summary": "This product is an excellent fit for your profile. It aligns with your vegan diet and low-sugar health goals."
-          }
-
-          Now, provide the JSON object for the given product and user profile.
-        `;
+    **Your Task:**
+    1.  **Calculate a Score (0-100):** Based on all the information, determine a suitability score for this user.
+        -   **Penalize heavily for allergens.** If the product contains any of the user's allergens, the score must be very low (under 20).
+        -   **Penalize for conflicts** with health goals (e.g., high sugar for a 'reduce_sugar' goal).
+        -   **Reward for alignment** with health goals (e.g., high protein for a 'build_muscle' goal).
+        -   **Consider overall healthiness** based on ingredients and nutritional info (e.g., processed, high sodium/sugar vs. organic, high fiber).
+    2.  **Determine a Rating:** Based on the score, provide a simple rating: "Excellent", "Good", "Fair", "Poor", or "Very Poor".
+    3.  **Write a Summary:** In 1-2 sentences, explain the score and rating. Be direct. If there's an allergen, state it clearly as the primary reason for a low score. Mention key alignments or conflicts with the user's goals.
+  `; //
 };
 
-
-function parseAnalysisResult(text: string): AnalysisResult {
-  try {
-    const parsed = JSON.parse(text);
-    if (typeof parsed.score === 'number' &&
-        typeof parsed.rating === 'string' &&
-        typeof parsed.summary === 'string') {
-      return parsed;
-    }
-    throw new Error("Parsed JSON does not match expected format.");
-  } catch (e) {
-    console.error("Failed to parse AI response:", e);
-    throw new Error("AI response was not in the expected JSON format.");
-  }
+function parseAnalysisResult(text: string): AnalysisResult | null {
+    try {
+        const json = JSON.parse(text);
+        if (typeof json.score !== 'number' || typeof json.rating !== 'string' || typeof json.summary !== 'string') {
+            console.error("Invalid JSON structure from AI:", json);
+            return null;
+        }
+        return json;
+    } catch (e) {
+        console.error("Failed to parse AI response:", text, e);
+        return null;
+    } //
 }
 
+
 export async function POST(req: Request) {
-    if (!apiKey) {
-        return NextResponse.json({ error: 'AI service is not configured.' }, { status: 500 });
+  if (!apiKey) {
+    return NextResponse.json({ error: 'AI service is not configured.' }, { status: 500 }); //
+  }
+
+  try {
+    const body = await req.json(); //
+    const { productId, user } = body; //
+
+    if (!productId || !user) {
+      return NextResponse.json({ error: 'Product ID and user data are required' }, { status: 400 }); //
     }
 
-    try {
-        const body = await req.json();
-        const { productId, user } = body;
+    const product = ALL_PRODUCTS.find(p => p.id === productId); //
 
-        if (!productId || !user) {
-            return NextResponse.json({ error: 'Missing productId or user data' }, { status: 400 });
-        }
-
-        const product = ALL_PRODUCTS.find(p => p.id === productId);
-
-        if (!product) {
-            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-        }
-
-        // Importación dinámica CORRECTA
-        const MistralAIModule = await import('@mistralai/mistralai');
-
-        // Accede a la exportación por defecto y usa 'as any'
-        const MistralClient = MistralAIModule.default as any;
-
-        // Usa la variable MistralClient directamente
-        const client = new MistralClient(apiKey);
-
-        const prompt = buildPrompt(product, user as User);
-
-        const chatResponse = await client.chat({
-            model: 'mistral-large-latest',
-            messages: [{ role: 'user', content: prompt }],
-            responseFormat: { type: 'json_object' }
-        });
-
-        const analysisText = chatResponse.choices[0].message.content;
-
-        if (!analysisText) {
-            throw new Error("Received empty response from AI.");
-        }
-
-        const analysis = parseAnalysisResult(analysisText);
-
-        return NextResponse.json(analysis);
-
-    } catch (error: any) {
-        console.error("Error in /api/analyze-product:", error);
-        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 }); //
     }
+
+    // --- Inicio de la Solución Correcta ---
+    // 1. Importar todo el módulo dinámicamente
+    const MistralAIModule = await import('@mistralai/mistralai');
+
+    // 2. Acceder al objeto 'default' (la "caja de herramientas")
+    //    Usamos 'as any' para evitar problemas con los tipos declarados incorrectamente.
+    const MistralAI = MistralAIModule.default as any;
+
+    // 3. Acceder a la propiedad 'MistralClient' DENTRO del objeto default
+    //    y AHORA SÍ usar 'new'.
+    const client = new MistralAI.MistralClient(apiKey);
+    // --- Fin de la Solución Correcta ---
+
+    const prompt = buildPrompt(product, user as User); //
+
+    const chatResponse = await client.chat({
+      model: 'mistral-large-latest',
+      messages: [{ role: 'user', content: prompt }],
+      responseFormat: { type: 'json_object' }
+    }); //
+
+    const analysisText = chatResponse.choices[0].message.content; //
+
+    if (!analysisText) {
+        throw new Error("Received empty response from AI."); //
+    }
+
+    const analysis = parseAnalysisResult(analysisText); //
+
+    if (!analysis) {
+        return NextResponse.json({
+            error: "AI analysis could not be completed. The model returned an invalid format."
+        }, { status: 500 }); //
+    }
+
+    return NextResponse.json(analysis); //
+
+  } catch (error: any) {
+    console.error("Error in /api/analyze-product:", error); //
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 }); //
+  }
 }
