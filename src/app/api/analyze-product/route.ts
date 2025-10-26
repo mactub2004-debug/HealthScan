@@ -1,59 +1,62 @@
 import { NextResponse } from 'next/server';
+import { mistral } from '@ai-sdk/mistral'; // Importar desde la librería correcta
+import { streamText, type CoreMessage } from 'ai'; // Importar utilidades del Vercel AI SDK
 import type { Product, User } from '@/lib/types'; //
 import { ALL_PRODUCTS } from '@/lib/data'; //
 
-// ... (interface AnalysisResult, apiKey check, buildPrompt, parseAnalysisResult se mantienen igual) ...
+// Opcional: Configurar para Vercel Edge Runtime
+export const runtime = 'edge';
+
 interface AnalysisResult {
   score: number;
   rating: string;
   summary: string;
 }
 
-const apiKey = process.env.MISTRAL_API_KEY;
+// La API Key (MISTRAL_API_KEY) debe estar configurada en las variables de entorno de Vercel.
 
-if (!apiKey) {
-  console.error("Mistral API key is not set in environment variables.");
-}
+const buildSystemPrompt = (): string => {
+ return `You are an expert nutritionist AI. Your task is to analyze a food product based on a user's profile and provide a clear, concise, and helpful analysis. You will output a VALID JSON object containing ONLY the following fields: "score" (number 0-100), "rating" (string: "Excellent", "Good", "Fair", "Poor", or "Very Poor"), and "summary" (string, 1-2 sentences explaining score/rating, noting allergens or key goal conflicts/alignments).`;
+};
 
-const buildPrompt = (product: Product, user: User): string => {
+const buildUserPrompt = (product: Product, user: User): string => {
   const userAllergies = user.allergies.join(', ') || 'none'; //
   const userDiets = user.diet.join(', ') || 'none'; //
   const userGoals = user.healthGoals.join(', ') || 'none'; //
 
   return `
-    You are an expert nutritionist AI. Your task is to analyze a food product based on a user's profile and provide a clear, concise, and helpful analysis. You will output a JSON object with the fields "score", "rating", and "summary".
+    Analyze the following product based on the provided user profile.
 
     **User Profile:**
-    - **Allergies:** ${userAllergies}
-    - **Dietary Preferences:** ${userDiets}
-    - **Health Goals:** ${userGoals}
+    - Allergies: ${userAllergies}
+    - Dietary Preferences: ${userDiets}
+    - Health Goals: ${userGoals}
 
     **Product Information:**
-    - **Name:** ${product.name}
-    - **Brand:** ${product.brand}
-    - **Ingredients:** ${product.ingredients}
-    - **Tags:** ${product.tags.join(', ')}
-    - **Nutritional Metrics (per 100g):**
-      ${product.nutritionalInformation.metrics.map(m => `- ${m.name}: ${m.per100g}`).join('\n          ')}
+    - Name: ${product.name}
+    - Brand: ${product.brand}
+    - Ingredients: ${product.ingredients}
+    - Tags: ${product.tags.join(', ')}
+    - Nutritional Metrics (per 100g):
+      ${product.nutritionalInformation.metrics.map(m => `- ${m.name}: ${m.per100g}`).join('\n      ')}
 
-    **Your Task:**
-    1.  **Calculate a Score (0-100):** Based on all the information, determine a suitability score for this user.
-        -   **Penalize heavily for allergens.** If the product contains any of the user's allergens, the score must be very low (under 20).
-        -   **Penalize for conflicts** with health goals (e.g., high sugar for a 'reduce_sugar' goal).
-        -   **Reward for alignment** with health goals (e.g., high protein for a 'build_muscle' goal).
-        -   **Consider overall healthiness** based on ingredients and nutritional info (e.g., processed, high sodium/sugar vs. organic, high fiber).
-    2.  **Determine a Rating:** Based on the score, provide a simple rating: "Excellent", "Good", "Fair", "Poor", or "Very Poor".
-    3.  **Write a Summary:** In 1-2 sentences, explain the score and rating. Be direct. If there's an allergen, state it clearly as the primary reason for a low score. Mention key alignments or conflicts with the user's goals.
-  `; //
+    **Instructions:**
+    1. Calculate Score (0-100): Penalize allergens heavily (score < 20). Penalize goal conflicts. Reward goal alignments. Consider overall healthiness.
+    2. Determine Rating: "Excellent", "Good", "Fair", "Poor", or "Very Poor" based on score.
+    3. Write Summary: 1-2 sentences. State allergens clearly if present. Mention key goal impacts.
+    Output ONLY the JSON object. No extra text or markdown formatting.
+  `;
 };
 
 function parseAnalysisResult(text: string): AnalysisResult | null {
     try {
-        const json = JSON.parse(text);
+        const jsonString = text.replace(/```json\n?|\n?```/g, '').trim();
+        const json = JSON.parse(jsonString);
         if (typeof json.score !== 'number' || typeof json.rating !== 'string' || typeof json.summary !== 'string') {
             console.error("Invalid JSON structure from AI:", json);
             return null;
         }
+        json.score = Math.max(0, Math.min(100, Math.round(json.score)));
         return json;
     } catch (e) {
         console.error("Failed to parse AI response:", text, e);
@@ -61,12 +64,7 @@ function parseAnalysisResult(text: string): AnalysisResult | null {
     } //
 }
 
-
 export async function POST(req: Request) {
-  if (!apiKey) {
-    return NextResponse.json({ error: 'AI service is not configured.' }, { status: 500 }); //
-  }
-
   try {
     const body = await req.json(); //
     const { productId, user } = body; //
@@ -74,54 +72,41 @@ export async function POST(req: Request) {
     if (!productId || !user) {
       return NextResponse.json({ error: 'Product ID and user data are required' }, { status: 400 }); //
     }
-
     const product = ALL_PRODUCTS.find(p => p.id === productId); //
-
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 }); //
     }
 
-    // --- Inicio de la Solución Alternativa Explícita ---
-    // 1. Importar dinámicamente
-    const MistralAIModule = await import('@mistralai/mistralai');
+    const messages: CoreMessage[] = [
+      { role: 'system', content: buildSystemPrompt() },
+      { role: 'user', content: buildUserPrompt(product, user as User) }
+    ];
 
-    // 2. Acceder al objeto 'default'
-    const MistralAIDefaultObject = MistralAIModule.default;
+    const result = await streamText({
+       model: mistral('mistral-large-latest'),
+       messages: messages,
+       mode: 'json' // Intentar obtener JSON directamente
+    });
 
-    // 3. Extraer la clase de la propiedad y aplicar 'as any' directamente a la clase extraída
-    const MistralClientClass = (MistralAIDefaultObject as any).MistralClient;
+    // Procesar respuesta JSON (Opción A, asumiendo que mode: 'json' funciona)
+     const analysis = await result.response;
 
-    // 4. Instanciar usando la variable que contiene la clase (ahora con 'any')
-    const client = new MistralClientClass(apiKey);
-    // --- Fin de la Solución Alternativa Explícita ---
+     if (typeof analysis.score !== 'number' || typeof analysis.rating !== 'string' || typeof analysis.summary !== 'string') {
+       console.error("Invalid JSON structure received with mode:json:", analysis);
+       throw new Error("AI analysis returned invalid format even with mode:json.");
+     }
+     analysis.score = Math.max(0, Math.min(100, Math.round(analysis.score)));
 
-
-    const prompt = buildPrompt(product, user as User); //
-
-    const chatResponse = await client.chat({
-      model: 'mistral-large-latest',
-      messages: [{ role: 'user', content: prompt }],
-      responseFormat: { type: 'json_object' }
-    }); //
-
-    const analysisText = chatResponse.choices[0].message.content; //
-
-    if (!analysisText) {
-        throw new Error("Received empty response from AI."); //
-    }
-
-    const analysis = parseAnalysisResult(analysisText); //
-
-    if (!analysis) {
-        return NextResponse.json({
-            error: "AI analysis could not be completed. The model returned an invalid format."
-        }, { status: 500 }); //
-    }
 
     return NextResponse.json(analysis); //
 
   } catch (error: any) {
     console.error("Error in /api/analyze-product:", error); //
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 }); //
+    let errorMessage = 'Internal Server Error';
+    let status = 500;
+     if (error.message) {
+         errorMessage = error.message;
+     }
+    return NextResponse.json({ error: errorMessage }, { status: status }); //
   }
 }
