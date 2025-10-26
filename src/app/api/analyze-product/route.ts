@@ -89,7 +89,9 @@ export async function POST(req: Request) {
     });
 
     // Procesar respuesta JSON (Opción A, asumiendo que mode: 'json' funciona)
-     const analysis = await result.response;
+     const { text, usage, finishReason, response } = await result;
+     const analysis = JSON.parse(text);
+
 
      if (typeof analysis.score !== 'number' || typeof analysis.rating !== 'string' || typeof analysis.summary !== 'string') {
        console.error("Invalid JSON structure received with mode:json:", analysis);
