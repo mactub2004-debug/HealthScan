@@ -82,16 +82,15 @@ export async function POST(req: Request) {
       { role: 'user', content: buildUserPrompt(product, user as User) }
     ];
 
+    // Llamada a la API usando Vercel AI SDK
     const result = await streamText({
-       model: mistral('mistral-large-latest'),
+       model: mistral('mistral-large-latest'), // La API key se toma de env vars
        messages: messages,
        mode: 'json' // Intentar obtener JSON directamente
     });
 
-    // Procesar respuesta JSON (Opción A, asumiendo que mode: 'json' funciona)
-     const { text, usage, finishReason, response } = await result;
-     const analysis = JSON.parse(text);
-
+    // Procesar respuesta JSON (asumiendo que mode: 'json' funciona)
+     const analysis = await result.response;
 
      if (typeof analysis.score !== 'number' || typeof analysis.rating !== 'string' || typeof analysis.summary !== 'string') {
        console.error("Invalid JSON structure received with mode:json:", analysis);
