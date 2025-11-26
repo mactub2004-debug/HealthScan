@@ -1,24 +1,33 @@
-import { ChevronLeft, Bell, Shield, User, Globe, Languages, Moon, HelpCircle, Eye } from 'lucide-react';
+import { ChevronLeft, Bell, Shield, User, Globe, Languages, Moon, HelpCircle, Save } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { demoUserProfile, commonAllergens, dietaryPreferences, countries, languages } from '../../lib/demo-data';
-import { useState } from 'react';
+import { demoUserProfile, countries, languages } from '../../lib/demo-data';
+import { StorageService } from '../../lib/storage';
+import { useState, useEffect } from 'react';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
   onActivateDemoMode?: () => void;
 }
 
-export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScreenProps) {
-  const [profileData, setProfileData] = useState({
-    name: demoUserProfile.name,
-    email: demoUserProfile.email,
-    country: demoUserProfile.country,
-    language: demoUserProfile.language
-  });
+export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
+  const [profileData, setProfileData] = useState(demoUserProfile);
+
+  useEffect(() => {
+    const storedProfile = StorageService.getUserProfile();
+    if (storedProfile) {
+      setProfileData(storedProfile);
+    }
+  }, []);
+
+  const handleSave = () => {
+    StorageService.saveUserProfile(profileData);
+    // Optional: Show success message
+    alert('Profile saved successfully!');
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-20">
@@ -26,7 +35,7 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
         {/* Header */}
         <div className="bg-white px-6 pt-10 pb-6 border-b border-gray-200">
           <div className="flex items-center gap-4 mb-2">
-            <button 
+            <button
               onClick={() => onNavigate('profile')}
               className="p-2 hover:bg-gray-100 rounded-full -ml-2"
             >
@@ -42,28 +51,28 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
             <div>
               <Label htmlFor="name" className="text-sm mb-2 block">Full Name</Label>
-              <Input 
+              <Input
                 id="name"
                 value={profileData.name}
-                onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 className="bg-[#F8F9FA]"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="email" className="text-sm mb-2 block">Email</Label>
-              <Input 
+              <Input
                 id="email"
                 type="email"
                 value={profileData.email}
-                onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                 className="bg-[#F8F9FA]"
               />
             </div>
 
             <div>
               <Label htmlFor="country" className="text-sm mb-2 block">Country</Label>
-              <Select value={profileData.country} onValueChange={(value) => setProfileData({...profileData, country: value})}>
+              <Select value={profileData.country} onValueChange={(value) => setProfileData({ ...profileData, country: value })}>
                 <SelectTrigger className="bg-[#F8F9FA]">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
@@ -79,7 +88,7 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
 
             <div>
               <Label htmlFor="language" className="text-sm mb-2 block">Language</Label>
-              <Select value={profileData.language} onValueChange={(value) => setProfileData({...profileData, language: value})}>
+              <Select value={profileData.language} onValueChange={(value) => setProfileData({ ...profileData, language: value })}>
                 <SelectTrigger className="bg-[#F8F9FA]">
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
@@ -92,6 +101,14 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
                 </SelectContent>
               </Select>
             </div>
+
+            <Button
+              onClick={handleSave}
+              className="w-full bg-[#22C55E] text-white hover:bg-[#22C55E]/90"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
           </div>
         </div>
 
@@ -108,7 +125,7 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
                   <div>
                     <p>Manage Allergies</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {demoUserProfile.allergies.join(', ')}
+                      {profileData.allergies.join(', ')}
                     </p>
                   </div>
                 </div>
@@ -124,7 +141,7 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
                   <div>
                     <p>Diet Preferences</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {demoUserProfile.preferences.join(', ')}
+                      {profileData.preferences.join(', ')}
                     </p>
                   </div>
                 </div>
@@ -146,7 +163,7 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
               </div>
               <Switch />
             </div>
-            
+
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#3B82F6]/10 rounded-xl flex items-center justify-center">
@@ -157,20 +174,6 @@ export function SettingsScreen({ onNavigate, onActivateDemoMode }: SettingsScree
               <Switch />
             </div>
           </div>
-        </div>
-
-        {/* Demo Mode */}
-        <div className="px-6 pb-6">
-          <Button
-            onClick={onActivateDemoMode}
-            className="w-full h-14 bg-[#3B82F6] text-white hover:bg-[#3B82F6]/90 rounded-2xl shadow-md"
-          >
-            <Eye className="w-5 h-5 mr-2" />
-            Activate Demo Mode
-          </Button>
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Demo mode allows you to preview all screens
-          </p>
         </div>
 
         {/* Support */}

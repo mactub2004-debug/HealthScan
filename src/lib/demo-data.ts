@@ -191,35 +191,35 @@ export const demoUserProfile: UserProfile = {
 };
 
 export const countries = [
-  'United States',
-  'United Kingdom',
-  'Canada',
-  'Australia',
-  'Germany',
-  'France',
-  'Spain',
-  'Italy',
-  'Mexico',
+  'Argentina',
+  'Bolivia',
   'Brazil',
-  'Japan',
-  'China',
-  'India',
-  'Other'
+  'Chile',
+  'Colombia',
+  'Costa Rica',
+  'Cuba',
+  'Dominican Republic',
+  'Ecuador',
+  'El Salvador',
+  'Guatemala',
+  'Honduras',
+  'Mexico',
+  'Nicaragua',
+  'Panama',
+  'Paraguay',
+  'Peru',
+  'Uruguay',
+  'Venezuela'
 ];
 
 export const languages = [
   'English',
   'Spanish',
-  'French',
-  'German',
-  'Italian',
-  'Portuguese',
-  'Chinese',
-  'Japanese',
-  'Other'
+  'Portuguese'
 ];
 
 export const commonAllergens = [
+  'Gluten',
   'Milk',
   'Eggs',
   'Fish',

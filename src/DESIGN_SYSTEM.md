@@ -7,6 +7,7 @@ HealthScan is a modern, minimalist food scanning mobile app with a focus on clea
 
 ### Primary Colors
 - **Primary Green** (`#22C55E`): Used for "suitable" products, CTAs, and positive actions
+- **Accent Green** (`#4CE3B6`): Used for branding, logo, highlights, and special accents
 - **Warning Orange** (`#F97316`): Used for "questionable" products and caution states
 - **Danger Red** (`#EF4444`): Used for "not recommended" products and alerts
 

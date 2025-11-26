@@ -1,12 +1,23 @@
-import { Scan, Sparkles, TrendingUp, Users, Lightbulb } from 'lucide-react';
-import { demoProducts, demoUserProfile } from '../../lib/demo-data';
+import { useState, useEffect } from 'react';
+import { Scan, Sparkles, Users, Lightbulb, TrendingUp } from 'lucide-react';
+import { demoProducts } from '../../lib/demo-data';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { StorageService, UserProfile } from '../../lib/storage';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HomeScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
+  const { t } = useLanguage();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const profile = StorageService.getUserProfile();
+    setUserProfile(profile);
+  }, []);
+
   const recommendedProducts = [
     demoProducts[0], // Suitable
     demoProducts[1], // Questionable
@@ -17,28 +28,28 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     switch (status) {
       case 'suitable':
         return {
-          label: 'Suitable',
+          label: t.home.status.suitable,
           color: 'text-[#22C55E]',
           bg: 'bg-[#22C55E]',
           lightBg: 'bg-[#22C55E]/10'
         };
       case 'questionable':
         return {
-          label: 'Questionable',
+          label: t.home.status.questionable,
           color: 'text-[#F97316]',
           bg: 'bg-[#F97316]',
           lightBg: 'bg-[#F97316]/10'
         };
       case 'not-recommended':
         return {
-          label: 'Not Recommended',
+          label: t.home.status.notRecommended,
           color: 'text-[#EF4444]',
           bg: 'bg-[#EF4444]',
           lightBg: 'bg-[#EF4444]/10'
         };
       default:
         return {
-          label: 'Unknown',
+          label: t.home.status.unknown,
           color: 'text-gray-500',
           bg: 'bg-gray-500',
           lightBg: 'bg-gray-500/10'
@@ -53,10 +64,10 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         <div className="px-6 pt-10 pb-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="mb-2">Hello, Alex! 👋</h1>
-              <p className="text-sm text-muted-foreground">Ready to make healthy choices?</p>
+              <h1 className="mb-2">{t.home.greeting}, {userProfile?.name.split(' ')[0] || 'Guest'}! 👋</h1>
+              <p className="text-sm text-muted-foreground">{t.home.readyMessage}</p>
             </div>
-            <button 
+            <button
               onClick={() => onNavigate('profile')}
               className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow border border-gray-100"
             >
@@ -77,7 +88,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               </div>
               <div className="text-center">
                 <p className="mb-1">47</p>
-                <p className="text-xs text-muted-foreground leading-tight">Products Scanned</p>
+                <p className="text-xs text-muted-foreground leading-tight">{t.stats.scannedProducts}</p>
               </div>
             </div>
 
@@ -88,7 +99,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               </div>
               <div className="text-center">
                 <p className="mb-1">85</p>
-                <p className="text-xs text-muted-foreground leading-tight">Health Score</p>
+                <p className="text-xs text-muted-foreground leading-tight">{t.stats.nutritionScore}</p>
               </div>
             </div>
           </div>
@@ -96,30 +107,30 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
 
         {/* Quick Actions */}
         <div className="px-6 pb-7">
-          <h3 className="mb-4">Quick Actions</h3>
+          <h3 className="mb-4 text-center">{t.home.quickActions}</h3>
           <div className="grid grid-cols-2 gap-3">
             {/* Smart Picks */}
-            <button 
+            <button
               onClick={() => onNavigate('recommendations')}
-              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-100"
+              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center border border-gray-100"
             >
               <div className="w-16 h-16 bg-[#F97316]/10 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
                 <Sparkles className="w-8 h-8 text-[#F97316]" />
               </div>
-              <p>Smart Picks</p>
-              <p className="text-xs text-muted-foreground mt-1">For you</p>
+              <p>{t.home.smartPicks}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t.home.forYou}</p>
             </button>
 
             {/* Community */}
-            <button 
+            <button
               onClick={() => onNavigate('search')}
-              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-100"
+              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center border border-gray-100"
             >
               <div className="w-16 h-16 bg-[#3B82F6]/10 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
                 <Users className="w-8 h-8 text-[#3B82F6]" />
               </div>
-              <p>Community</p>
-              <p className="text-xs text-muted-foreground mt-1">Top rated</p>
+              <p>{t.home.community}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t.home.topRated}</p>
             </button>
           </div>
         </div>
@@ -127,28 +138,28 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
         {/* Recommended for You */}
         <div className="pb-6">
           <div className="flex items-center justify-between mb-4 px-6">
-            <h3>Recommended for You</h3>
-            <button 
+            <h3>{t.home.recommended}</h3>
+            <button
               onClick={() => onNavigate('recommendations')}
               className="text-sm text-[#22C55E] hover:text-[#22C55E]/80 transition-colors"
             >
-              See all
+              {t.home.viewAll}
             </button>
           </div>
-          
+
           <div className="flex gap-3 overflow-x-auto pb-2 px-6 scrollbar-hide">
             {recommendedProducts.map((product) => {
               const statusConfig = getStatusConfig(product.status);
               return (
-                <div 
+                <div
                   key={product.id}
                   onClick={() => onNavigate('scan-result', { product })}
                   className="flex-shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-gray-100"
                 >
                   {/* Product Image */}
                   <div className="relative w-full h-40">
-                    <ImageWithFallback 
-                      src={product.image} 
+                    <ImageWithFallback
+                      src={product.image}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />
@@ -158,17 +169,17 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                       </span>
                     </div>
                   </div>
-                  
+
                   {/* Product Info */}
                   <div className="p-4">
                     <p className="text-xs text-muted-foreground mb-1">{product.brand}</p>
                     <h4 className="line-clamp-2 mb-1">{product.name}</h4>
                     <p className="text-xs text-muted-foreground mb-3">{product.category}</p>
-                    
+
                     {/* Score Bar */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-[#22C55E] rounded-full transition-all"
                           style={{ width: `${product.nutritionScore}%` }}
                         />
@@ -190,9 +201,9 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 <Lightbulb className="w-7 h-7 text-[#F97316]" />
               </div>
               <div className="flex-1">
-                <p className="mb-2">Daily Tip</p>
+                <p className="mb-2">{t.home.dailyTip}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Reading nutrition labels? Focus on serving sizes first to accurately calculate your intake.
+                  {t.home.tipContent}
                 </p>
               </div>
             </div>

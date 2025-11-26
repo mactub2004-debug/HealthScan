@@ -5,40 +5,42 @@ import { Badge } from '../ui/badge';
 import { ProductCard } from '../ProductCard';
 import { demoProducts } from '../../lib/demo-data';
 import { Button } from '../ui/button';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface SearchScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function SearchScreen({ onNavigate }: SearchScreenProps) {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const categories = ['All', ...Array.from(new Set(demoProducts.map(p => p.category)))];
   const statuses = [
-    { value: 'suitable', label: 'Safe', color: 'bg-[#22C55E]' },
-    { value: 'questionable', label: 'Caution', color: 'bg-[#F97316]' },
-    { value: 'not-recommended', label: 'Avoid', color: 'bg-[#EF4444]' }
+    { value: 'suitable', label: t.search.statusLabels.safe, color: 'bg-[#22C55E]' },
+    { value: 'questionable', label: t.search.statusLabels.caution, color: 'bg-[#F97316]' },
+    { value: 'not-recommended', label: t.search.statusLabels.avoid, color: 'bg-[#EF4444]' }
   ];
 
   const filteredProducts = demoProducts.filter(product => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.category.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = !selectedCategory || 
-      selectedCategory === 'All' || 
+
+    const matchesCategory = !selectedCategory ||
+      selectedCategory === 'All' ||
       product.category === selectedCategory;
-    
+
     const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(product.status);
 
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const toggleStatus = (statusValue: string) => {
-    setSelectedStatuses(prev => 
+    setSelectedStatuses(prev =>
       prev.includes(statusValue)
         ? prev.filter(s => s !== statusValue)
         : [...prev, statusValue]
@@ -58,9 +60,9 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 pt-10 pb-6 sticky top-0 z-10">
         <div className="max-w-md mx-auto">
-          <h1>Search Products</h1>
+          <h1>{t.search.title}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Find and compare products
+            {t.search.subtitle}
           </p>
         </div>
       </div>
@@ -70,7 +72,7 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Search by name, brand, or category..."
+            placeholder={t.search.placeholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-12 pr-12 h-12 bg-white rounded-2xl border-gray-200"
@@ -91,18 +93,17 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
         {/* Categories */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p>Categories</p>
+            <p>{t.search.categories}</p>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {categories.map((category) => (
               <Badge
                 key={category}
                 variant={selectedCategory === category || (category === 'All' && !selectedCategory) ? 'default' : 'outline'}
-                className={`cursor-pointer whitespace-nowrap px-4 py-2 rounded-xl transition-all ${
-                  selectedCategory === category || (category === 'All' && !selectedCategory)
-                    ? 'bg-[#22C55E] text-white hover:bg-[#22C55E]/90' 
+                className={`cursor-pointer whitespace-nowrap px-4 py-2 rounded-xl transition-all ${selectedCategory === category || (category === 'All' && !selectedCategory)
+                    ? 'bg-[#22C55E] text-white hover:bg-[#22C55E]/90'
                     : 'hover:border-[#22C55E]/50'
-                }`}
+                  }`}
                 onClick={() => setSelectedCategory(category === 'All' ? null : category)}
               >
                 {category}
@@ -114,10 +115,10 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
         {/* Status */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <p>Filter by Status</p>
+            <p>{t.search.filterByStatus}</p>
             {selectedStatuses.length > 0 && (
               <span className="text-xs text-muted-foreground">
-                {selectedStatuses.length} selected
+                {selectedStatuses.length} {t.search.selected}
               </span>
             )}
           </div>
@@ -128,11 +129,10 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
                 <button
                   key={status.value}
                   onClick={() => toggleStatus(status.value)}
-                  className={`py-2.5 rounded-xl transition-all text-center border-2 ${
-                    isSelected
+                  className={`py-2.5 rounded-xl transition-all text-center border-2 ${isSelected
                       ? `${status.color} text-white border-transparent`
                       : 'bg-white border-gray-200 hover:border-gray-300'
-                  }`}
+                    }`}
                 >
                   <span className="text-xs">{status.label}</span>
                 </button>
@@ -149,7 +149,7 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
             className="w-full h-12 rounded-2xl border-gray-200 hover:bg-white"
           >
             <X className="w-4 h-4 mr-2" />
-            Clear Filters
+            {t.search.clearFilters}
           </Button>
         )}
       </div>
@@ -161,19 +161,19 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
             <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
               <Search className="w-10 h-10 text-muted-foreground/50" />
             </div>
-            <p className="text-muted-foreground">No products found</p>
+            <p className="text-muted-foreground">{t.search.noResults}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Try adjusting your search or filters
+              {t.search.tryAdjusting}
             </p>
           </div>
         ) : (
           <div>
             <p className="text-sm text-muted-foreground mb-4">
-              {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+              {filteredProducts.length} {t.search.found}
             </p>
             <div className="space-y-3">
               {filteredProducts.map((product, index) => (
-                <div 
+                <div
                   key={product.id}
                   className="animate-in fade-in slide-in-from-bottom-4"
                   style={{ animationDelay: `${index * 50}ms` }}

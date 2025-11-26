@@ -1,0 +1,344 @@
+{
+    "products": [
+        {
+            "barcode": "7501000111111",
+            "name": "Coca-Cola Original 600ml",
+            "brand": "Coca-Cola",
+            "category": "Bebidas",
+            "image": "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400",
+            "ingredients": [
+                "Agua carbonatada",
+                "Azúcar",
+                "Colorante caramelo E-150d",
+                "Ácido fosfórico",
+                "Aromas naturales",
+                "Cafeína"
+            ],
+            "allergens": [],
+            "nutrition": {
+                "servingSize": "100ml",
+                "calories": 42,
+                "protein": 0,
+                "carbs": 10.6,
+                "sugar": 10.6,
+                "fat": 0,
+                "sodium": 10,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501055300000",
+            "name": "Doritos Nacho Cheese 150g",
+            "brand": "Doritos",
+            "category": "Snacks",
+            "image": "https://images.unsplash.com/photo-1613919113640-25732ec5e61f?w=400",
+            "ingredients": [
+                "Maíz",
+                "Aceite vegetal",
+                "Queso cheddar",
+                "Sal",
+                "Glutamato monosódico",
+                "Colorantes artificiales"
+            ],
+            "allergens": [
+                "Leche"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 498,
+                "protein": 7,
+                "carbs": 63,
+                "sugar": 2,
+                "fat": 24,
+                "sodium": 590,
+                "fiber": 4
+            }
+        },
+        {
+            "barcode": "7501055300001",
+            "name": "Leche Lala Entera 1L",
+            "brand": "Lala",
+            "category": "Lácteos",
+            "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+            "ingredients": [
+                "Leche entera pasteurizada",
+                "Vitamina A",
+                "Vitamina D"
+            ],
+            "allergens": [
+                "Leche"
+            ],
+            "nutrition": {
+                "servingSize": "100ml",
+                "calories": 61,
+                "protein": 3.2,
+                "carbs": 4.7,
+                "sugar": 4.7,
+                "fat": 3.3,
+                "sodium": 44,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501000100000",
+            "name": "Pepsi 600ml",
+            "brand": "Pepsi",
+            "category": "Bebidas",
+            "image": "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+            "ingredients": [
+                "Agua carbonatada",
+                "Jarabe de maíz de alta fructosa",
+                "Colorante caramelo",
+                "Ácido fosfórico",
+                "Cafeína",
+                "Ácido cítrico"
+            ],
+            "allergens": [],
+            "nutrition": {
+                "servingSize": "100ml",
+                "calories": 41,
+                "protein": 0,
+                "carbs": 11,
+                "sugar": 11,
+                "fat": 0,
+                "sodium": 15,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501000200000",
+            "name": "Galletas Oreo 154g",
+            "brand": "Oreo",
+            "category": "Snacks",
+            "image": "https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?w=400",
+            "ingredients": [
+                "Harina de trigo",
+                "Azúcar",
+                "Aceite vegetal",
+                "Cacao",
+                "Jarabe de maíz",
+                "Lecitina de soja",
+                "Bicarbonato de sodio"
+            ],
+            "allergens": [
+                "Gluten",
+                "Soja"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 480,
+                "protein": 4.7,
+                "carbs": 68,
+                "sugar": 39,
+                "fat": 20,
+                "sodium": 450,
+                "fiber": 2.5
+            }
+        },
+        {
+            "barcode": "7501000300000",
+            "name": "Yogurt Danone Natural 1kg",
+            "brand": "Danone",
+            "category": "Lácteos",
+            "image": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400",
+            "ingredients": [
+                "Leche pasteurizada",
+                "Cultivos lácticos",
+                "Azúcar",
+                "Vitaminas A y D"
+            ],
+            "allergens": [
+                "Leche"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 59,
+                "protein": 3.5,
+                "carbs": 4.7,
+                "sugar": 4.7,
+                "fat": 3.3,
+                "sodium": 47,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501000400000",
+            "name": "Corn Flakes Kellogg's 500g",
+            "brand": "Kellogg's",
+            "category": "Cereales",
+            "image": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400",
+            "ingredients": [
+                "Maíz",
+                "Azúcar",
+                "Sal",
+                "Extracto de malta",
+                "Vitaminas y minerales"
+            ],
+            "allergens": [],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 357,
+                "protein": 7.5,
+                "carbs": 84,
+                "sugar": 8,
+                "fat": 0.9,
+                "sodium": 660,
+                "fiber": 3
+            }
+        },
+        {
+            "barcode": "7501000500000",
+            "name": "Atún Dolores en Agua 140g",
+            "brand": "Dolores",
+            "category": "Conservas",
+            "image": "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400",
+            "ingredients": [
+                "Atún",
+                "Agua",
+                "Sal"
+            ],
+            "allergens": [
+                "Pescado"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 116,
+                "protein": 26,
+                "carbs": 0,
+                "sugar": 0,
+                "fat": 1,
+                "sodium": 340,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501000600000",
+            "name": "Agua Ciel 1L",
+            "brand": "Ciel",
+            "category": "Bebidas",
+            "image": "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400",
+            "ingredients": [
+                "Agua purificada",
+                "Minerales añadidos"
+            ],
+            "allergens": [],
+            "nutrition": {
+                "servingSize": "100ml",
+                "calories": 0,
+                "protein": 0,
+                "carbs": 0,
+                "sugar": 0,
+                "fat": 0,
+                "sodium": 5,
+                "fiber": 0
+            }
+        },
+        {
+            "barcode": "7501000700000",
+            "name": "Cheetos Flamin' Hot 150g",
+            "brand": "Cheetos",
+            "category": "Snacks",
+            "image": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400",
+            "ingredients": [
+                "Maíz",
+                "Aceite vegetal",
+                "Queso",
+                "Sal",
+                "Especias",
+                "Glutamato monosódico",
+                "Colorante rojo 40"
+            ],
+            "allergens": [
+                "Leche"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 570,
+                "protein": 6,
+                "carbs": 50,
+                "sugar": 3,
+                "fat": 36,
+                "sodium": 800,
+                "fiber": 3
+            }
+        },
+        {
+            "barcode": "7501000800000",
+            "name": "Granola Nature Valley 230g",
+            "brand": "Nature Valley",
+            "category": "Cereales",
+            "image": "https://images.unsplash.com/photo-1526318896980-cf78c088247c?w=400",
+            "ingredients": [
+                "Avena integral",
+                "Azúcar",
+                "Aceite de canola",
+                "Miel",
+                "Almendras",
+                "Sal"
+            ],
+            "allergens": [
+                "Frutos secos"
+            ],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 471,
+                "protein": 10,
+                "carbs": 64,
+                "sugar": 28,
+                "fat": 18,
+                "sodium": 380,
+                "fiber": 8
+            }
+        },
+        {
+            "barcode": "7501000900000",
+            "name": "Frijoles Negros La Costeña 560g",
+            "brand": "La Costeña",
+            "category": "Conservas",
+            "image": "https://images.unsplash.com/photo-1589927986089-35812388d1f8?w=400",
+            "ingredients": [
+                "Frijoles negros",
+                "Agua",
+                "Sal",
+                "Cloruro de calcio"
+            ],
+            "allergens": [],
+            "nutrition": {
+                "servingSize": "100g",
+                "calories": 91,
+                "protein": 6,
+                "carbs": 16,
+                "sugar": 0.5,
+                "fat": 0.5,
+                "sodium": 380,
+                "fiber": 6
+            }
+        },
+        {
+            "barcode": "7790742336200",
+            "name": "Leche Armonía Entera Larga Vida 2%",
+            "brand": "Armonía",
+            "category": "Lácteos",
+            "image": "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+            "ingredients": [
+                "Leche entera parcialmente descremada",
+                "Vitamina A",
+                "Vitamina D"
+            ],
+            "allergens": [
+                "Leche"
+            ],
+            "nutrition": {
+                "servingSize": "100ml",
+                "calories": 49,
+                "protein": 3,
+                "carbs": 4.7,
+                "sugar": 4.7,
+                "fat": 2,
+                "fatSaturated": 1.3,
+                "sodium": 45,
+                "fiber": 0
+            }
+        }
+    ]
+}

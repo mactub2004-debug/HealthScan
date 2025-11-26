@@ -1,39 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock, GitCompare, Trash2, ArrowRight } from 'lucide-react';
-import { demoScanHistory, demoComparisons, ProductComparison } from '../../lib/demo-data';
+import { demoComparisons, ProductComparison, ScanHistoryItem } from '../../lib/demo-data';
+import { StorageService } from '../../lib/storage';
 import { ProductCard } from '../ProductCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface HistoryScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
-  const [historyItems, setHistoryItems] = useState(demoScanHistory);
+  const { t } = useLanguage();
+  const [historyItems, setHistoryItems] = useState<ScanHistoryItem[]>([]);
   const [comparisons] = useState(demoComparisons);
 
-  const toggleFavorite = (id: string) => {
-    setHistoryItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-      )
-    );
+  useEffect(() => {
+    setHistoryItems(StorageService.getScanHistory());
+  }, []);
+
+  const toggleFavorite = (productId: string) => {
+    const updated = StorageService.toggleFavorite(productId);
+    setHistoryItems(updated);
+  };
+
+  const deleteItem = (historyId: string) => {
+    const updated = StorageService.deleteScanHistoryItem(historyId);
+    setHistoryItems(updated);
   };
 
   const formatDate = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    
+
     if (hours < 24) {
-      if (hours < 1) return 'Just now';
-      return `${hours}h ago`;
+      if (hours < 1) return t.history.time.justNow;
+      return `${hours}${t.history.time.ago}`;
     }
-    
+
     const days = Math.floor(hours / 24);
-    if (days === 1) return 'Yesterday';
-    return `${days} days ago`;
+    if (days === 1) return t.history.time.yesterday;
+    return `${days} ${t.history.time.daysAgo}`;
   };
 
   return (
@@ -41,9 +50,9 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 pt-10 pb-6 sticky top-0 z-10">
         <div className="max-w-md mx-auto">
-          <h1>History</h1>
+          <h1>{t.history.title}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {historyItems.length} products scanned
+            {historyItems.length} {t.history.scannedCount}
           </p>
         </div>
       </div>
@@ -52,19 +61,19 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
       <div className="max-w-md mx-auto">
         <Tabs defaultValue="products" className="mt-6">
           <TabsList className="w-full mx-6 bg-white rounded-2xl p-1.5 shadow-sm border border-gray-100">
-            <TabsTrigger 
-              value="products" 
+            <TabsTrigger
+              value="products"
               className="flex-1 rounded-xl data-[state=active]:bg-[#22C55E] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <Clock className="w-4 h-4 mr-2" />
-              Product History
+              {t.history.tabs.products}
             </TabsTrigger>
-            <TabsTrigger 
-              value="comparisons" 
+            <TabsTrigger
+              value="comparisons"
               className="flex-1 rounded-xl data-[state=active]:bg-[#22C55E] data-[state=active]:text-white data-[state=active]:shadow-md"
             >
               <GitCompare className="w-4 h-4 mr-2" />
-              Comparisons
+              {t.history.tabs.comparisons}
             </TabsTrigger>
           </TabsList>
 
@@ -74,15 +83,15 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                 <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-10 h-10 text-muted-foreground/50" />
                 </div>
-                <p className="text-muted-foreground">No scan history yet</p>
+                <p className="text-muted-foreground">{t.history.noHistory}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Start scanning products to build your history
+                  {t.history.startScanning}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {historyItems.map((item) => (
-                  <div 
+                  <div
                     key={item.id}
                     className="animate-in fade-in slide-in-from-bottom-4"
                   >
@@ -93,7 +102,10 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                           {formatDate(item.scannedAt)}
                         </p>
                       </div>
-                      <button className="text-muted-foreground hover:text-[#EF4444] transition-colors">
+                      <button
+                        onClick={() => deleteItem(item.id)}
+                        className="text-muted-foreground hover:text-[#EF4444] transition-colors"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -101,7 +113,7 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                       product={item.product}
                       onClick={() => onNavigate('scan-result', { product: item.product })}
                       isFavorite={item.isFavorite}
-                      onToggleFavorite={() => toggleFavorite(item.id)}
+                      onToggleFavorite={() => toggleFavorite(item.product.id)}
                       showFavorite
                     />
                   </div>
@@ -116,15 +128,15 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                 <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                   <GitCompare className="w-10 h-10 text-muted-foreground/50" />
                 </div>
-                <p className="text-muted-foreground">No comparisons yet</p>
+                <p className="text-muted-foreground">{t.history.noComparisons}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Compare products to make better choices
+                  {t.history.compareHint}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {comparisons.map((comparison) => (
-                  <div 
+                  <div
                     key={comparison.id}
                     className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                     onClick={() => {
@@ -141,24 +153,23 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                         {formatDate(comparison.createdAt)}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       {comparison.products.map((product, index) => (
                         <div key={product.id} className="flex items-center flex-1">
                           <div className="relative flex-1">
                             <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                              <ImageWithFallback 
+                              <ImageWithFallback
                                 src={product.image}
                                 alt={product.name}
                                 className="w-full h-20 object-cover rounded-lg mb-2"
                               />
                               <p className="text-xs mb-0.5 line-clamp-1">{product.name}</p>
                               <div className="flex items-center gap-1">
-                                <div className={`w-2 h-2 rounded-full ${
-                                  product.status === 'suitable' ? 'bg-[#22C55E]' :
+                                <div className={`w-2 h-2 rounded-full ${product.status === 'suitable' ? 'bg-[#22C55E]' :
                                   product.status === 'questionable' ? 'bg-[#F97316]' :
-                                  'bg-[#EF4444]'
-                                }`} />
+                                    'bg-[#EF4444]'
+                                  }`} />
                                 <span className="text-xs text-muted-foreground">
                                   Score: {product.nutritionScore}
                                 </span>
@@ -171,10 +182,10 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-xs text-[#22C55E] text-center">
-                        Tap to view comparison details
+                        {t.history.viewComparison}
                       </p>
                     </div>
                   </div>
