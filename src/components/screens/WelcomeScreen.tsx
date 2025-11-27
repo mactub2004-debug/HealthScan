@@ -73,30 +73,6 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
             {/* Main Content Container */}
             <div className="relative z-10 flex flex-col flex-1 w-full max-w-md mx-auto px-6 pt-24 pb-8 justify-between">
 
-                {/* TOP: Headline */}
-                <motion.div
-                    className="flex flex-col items-center text-center mt-4"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                    <h1
-                        className="text-foreground font-bold"
-                        style={{
-                            fontSize: '40px',
-                            fontFamily: 'Inter, SF Pro Display, -apple-system, sans-serif',
-                            lineHeight: '1.2',
-                            letterSpacing: '-0.02em',
-                        }}
-                    >
-                        {t.welcome.title}
-                    </h1>
-
-                    <p className="text-muted-foreground mt-4 text-lg">
-                        {t.welcome.subtitle}
-                    </p>
-                </motion.div>
-
                 {/* CENTER: Illustration/Logo */}
                 <motion.div
                     className="flex items-center justify-center flex-1"
@@ -121,6 +97,30 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                             style={{ mixBlendMode: 'multiply' }}
                         />
                     </div>
+                </motion.div>
+
+                {/* TOP: Headline */}
+                <motion.div
+                    className="flex flex-col items-center text-center mt-4"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                    <h1
+                        className="text-foreground font-bold"
+                        style={{
+                            fontSize: '40px',
+                            fontFamily: 'Inter, SF Pro Display, -apple-system, sans-serif',
+                            lineHeight: '1.2',
+                            letterSpacing: '-0.02em',
+                        }}
+                    >
+                        {t.welcome.title}
+                    </h1>
+
+                    <p className="text-muted-foreground mt-4 text-lg">
+                        {t.welcome.subtitle}
+                    </p>
                 </motion.div>
 
                 {/* BOTTOM: CTA */}
@@ -154,11 +154,7 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                     </motion.button>
 
                     {/* Micro-copy hint */}
-                    {!isAnalyzing && (
-                        <span className="mt-2 text-[10px] opacity-60 font-normal text-muted-foreground">
-                            ~10s setup
-                        </span>
-                    )}
+
 
                     {/* Sign In Link */}
                     <motion.button
