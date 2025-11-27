@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus, Check, Trash2, ShoppingBag, Package } from 'lucide-react';
+import { Plus, Check, Trash2, ShoppingBag, Package, GripVertical } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Checkbox } from '../ui/checkbox';
@@ -13,6 +13,7 @@ import {
 } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { Reorder, useDragControls } from 'framer-motion';
 
 interface ShoppingListItem {
   id: string;
@@ -53,7 +54,7 @@ export function ShoppingListScreen({ onNavigate }: ShoppingListScreenProps) {
   };
 
   const handleToggleItem = (id: string) => {
-    setItems(items.map(item => 
+    setItems(items.map(item =>
       item.id === id ? { ...item, checked: !item.checked } : item
     ));
   };
@@ -70,7 +71,7 @@ export function ShoppingListScreen({ onNavigate }: ShoppingListScreenProps) {
   const handleTouchMove = (e: React.TouchEvent, id: string) => {
     touchCurrentX.current = e.touches[0].clientX;
     const diff = touchStartX.current - touchCurrentX.current;
-    
+
     if (diff > 50) {
       setSwipedItem(id);
     } else if (diff < -50) {
@@ -162,132 +163,47 @@ export function ShoppingListScreen({ onNavigate }: ShoppingListScreenProps) {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Unchecked Items */}
+              {/* Unchecked Items - Reorderable */}
               {uncheckedItems.length > 0 && (
                 <div>
                   <h3 className="mb-3">To Buy</h3>
-                  <div className="space-y-2">
-                    {uncheckedItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="relative overflow-hidden rounded-2xl"
-                      >
-                        {/* Delete background (revealed on swipe) */}
-                        <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
-                          <Trash2 className="w-6 h-6 text-white" />
-                        </div>
-                        
-                        {/* Main content (swipeable) */}
-                        <div
-                          onTouchStart={(e) => handleTouchStart(e, item.id)}
-                          onTouchMove={(e) => handleTouchMove(e, item.id)}
-                          onTouchEnd={handleTouchEnd}
-                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200"
-                          style={{
-                            transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
-                          }}
-                        >
-                          <Checkbox
-                            checked={item.checked}
-                            onCheckedChange={() => handleToggleItem(item.id)}
-                            className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
-                          />
-                          
-                          {item.image ? (
-                            <ImageWithFallback
-                              src={item.image}
-                              alt={item.name}
-                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                              <Package className="w-6 h-6 text-gray-400" />
-                            </div>
-                          )}
-
-                          <div className="flex-1 min-w-0">
-                            {item.brand && (
-                              <p className="text-xs text-muted-foreground">{item.brand}</p>
-                            )}
-                            <p className="truncate">{item.name}</p>
-                          </div>
-                        </div>
-
-                        {/* Delete button (shown when swiped) */}
-                        {swipedItem === item.id && (
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center"
-                          >
-                            <Trash2 className="w-6 h-6 text-white" />
-                          </button>
-                        )}
-                      </div>
+                  <Reorder.Group axis="y" values={items} onReorder={setItems} className="space-y-2">
+                    {items.filter(item => !item.checked).map((item) => (
+                      <Reorder.Item key={item.id} value={item} dragListener={false}>
+                        <ShoppingListItemComponent
+                          item={item}
+                          onToggle={() => handleToggleItem(item.id)}
+                          onDelete={() => handleDeleteItem(item.id)}
+                          swipedItem={swipedItem}
+                          setSwipedItem={setSwipedItem}
+                          handleTouchStart={handleTouchStart}
+                          handleTouchMove={handleTouchMove}
+                          handleTouchEnd={handleTouchEnd}
+                        />
+                      </Reorder.Item>
                     ))}
-                  </div>
+                  </Reorder.Group>
                 </div>
               )}
 
-              {/* Checked Items */}
+              {/* Checked Items - Not reorderable usually, but let's keep them separate */}
               {checkedItems.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-muted-foreground">Completed ({checkedItems.length})</h3>
                   <div className="space-y-2">
                     {checkedItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="relative overflow-hidden rounded-2xl opacity-60"
-                      >
-                        {/* Delete background (revealed on swipe) */}
-                        <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
-                          <Trash2 className="w-6 h-6 text-white" />
-                        </div>
-                        
-                        {/* Main content (swipeable) */}
-                        <div
-                          onTouchStart={(e) => handleTouchStart(e, item.id)}
-                          onTouchMove={(e) => handleTouchMove(e, item.id)}
-                          onTouchEnd={handleTouchEnd}
-                          className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200"
-                          style={{
-                            transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
-                          }}
-                        >
-                          <Checkbox
-                            checked={item.checked}
-                            onCheckedChange={() => handleToggleItem(item.id)}
-                            className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
-                          />
-                          
-                          {item.image ? (
-                            <ImageWithFallback
-                              src={item.image}
-                              alt={item.name}
-                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                              <Package className="w-6 h-6 text-gray-400" />
-                            </div>
-                          )}
-
-                          <div className="flex-1 min-w-0">
-                            {item.brand && (
-                              <p className="text-xs text-muted-foreground line-through">{item.brand}</p>
-                            )}
-                            <p className="truncate line-through">{item.name}</p>
-                          </div>
-                        </div>
-
-                        {/* Delete button (shown when swiped) */}
-                        {swipedItem === item.id && (
-                          <button
-                            onClick={() => handleDeleteItem(item.id)}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center"
-                          >
-                            <Trash2 className="w-6 h-6 text-white" />
-                          </button>
-                        )}
+                      <div key={item.id}>
+                        <ShoppingListItemComponent
+                          item={item}
+                          onToggle={() => handleToggleItem(item.id)}
+                          onDelete={() => handleDeleteItem(item.id)}
+                          swipedItem={swipedItem}
+                          setSwipedItem={setSwipedItem}
+                          handleTouchStart={handleTouchStart}
+                          handleTouchMove={handleTouchMove}
+                          handleTouchEnd={handleTouchEnd}
+                          isCompleted
+                        />
                       </div>
                     ))}
                   </div>
@@ -348,6 +264,101 @@ export function ShoppingListScreen({ onNavigate }: ShoppingListScreenProps) {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Extracted component for cleaner code and drag controls
+function ShoppingListItemComponent({
+  item,
+  onToggle,
+  onDelete,
+  swipedItem,
+  setSwipedItem,
+  handleTouchStart,
+  handleTouchMove,
+  handleTouchEnd,
+  isCompleted = false
+}: {
+  item: ShoppingListItem,
+  onToggle: () => void,
+  onDelete: () => void,
+  swipedItem: string | null,
+  setSwipedItem: (id: string | null) => void,
+  handleTouchStart: (e: React.TouchEvent, id: string) => void,
+  handleTouchMove: (e: React.TouchEvent, id: string) => void,
+  handleTouchEnd: () => void,
+  isCompleted?: boolean
+}) {
+  const controls = useDragControls();
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl ${isCompleted ? 'opacity-60' : ''}`}>
+      {/* Delete background (revealed on swipe) */}
+      <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
+        <Trash2 className="w-6 h-6 text-white" />
+      </div>
+
+      {/* Main content (swipeable) */}
+      <div
+        onTouchStart={(e) => handleTouchStart(e, item.id)}
+        onTouchMove={(e) => handleTouchMove(e, item.id)}
+        onTouchEnd={handleTouchEnd}
+        onClick={onToggle} // Click anywhere to toggle
+        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200 active:scale-[0.99] transition-all"
+        style={{
+          transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
+        }}
+      >
+        {/* Drag Handle - Only show for uncompleted items */}
+        {!isCompleted && (
+          <div
+            onPointerDown={(e) => controls.start(e)}
+            className="touch-none cursor-grab active:cursor-grabbing p-1 -ml-2 text-gray-300 hover:text-gray-500"
+            onClick={(e) => e.stopPropagation()} // Prevent toggle when clicking handle
+          >
+            <GripVertical className="w-5 h-5" />
+          </div>
+        )}
+
+        <Checkbox
+          checked={item.checked}
+          onCheckedChange={() => { }} // Handled by parent onClick
+          className="data-[state=checked]:bg-[#22C55E] data-[state=checked]:border-[#22C55E]"
+        />
+
+        {item.image ? (
+          <ImageWithFallback
+            src={item.image}
+            alt={item.name}
+            className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <Package className="w-6 h-6 text-gray-400" />
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0 select-none">
+          {item.brand && (
+            <p className={`text-xs text-muted-foreground ${isCompleted ? 'line-through' : ''}`}>{item.brand}</p>
+          )}
+          <p className={`truncate ${isCompleted ? 'line-through' : ''}`}>{item.name}</p>
+        </div>
+      </div>
+
+      {/* Delete button (shown when swiped) */}
+      {swipedItem === item.id && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center"
+        >
+          <Trash2 className="w-6 h-6 text-white" />
+        </button>
+      )}
     </div>
   );
 }

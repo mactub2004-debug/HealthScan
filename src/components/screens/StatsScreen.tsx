@@ -1,5 +1,5 @@
 import { ChevronLeft, Award, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { demoScanHistory } from '../../lib/demo-data';
 import { Badge } from '../ui/badge';
@@ -12,6 +12,11 @@ interface StatsScreenProps {
 export function StatsScreen({ onBack }: StatsScreenProps) {
   const { t } = useLanguage();
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'year'>('week');
+
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Generate score data based on time range
   const getScoreData = () => {
