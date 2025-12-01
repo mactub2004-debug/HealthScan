@@ -1,8 +1,6 @@
 
   # Revise Mobile App Design System
 
-  This is a code bundle for Revise Mobile App Design System. The original project is available at https://www.figma.com/design/a9vykSGT0GuZ5GwM40Wf5G/Revise-Mobile-App-Design-System.
-
   ## Running the code
 
   Run `npm i` to install the dependencies.

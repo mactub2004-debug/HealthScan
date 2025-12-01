@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import logoImage from '../../assets/logo.jpg';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Language } from '../../lib/translations';
 
@@ -12,8 +11,7 @@ interface WelcomeScreenProps {
 
 const languages: Record<Language, { label: string; flag: string }> = {
     ES: { label: 'Español', flag: '🇪🇸' },
-    EN: { label: 'English', flag: '🇺🇸' },
-    PT: { label: 'Português', flag: '🇧🇷' }
+    EN: { label: 'English', flag: '🇺🇸' }
 };
 
 export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
@@ -21,26 +19,27 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     return (
-        <div className="min-h-screen relative overflow-hidden bg-[#FDFDFD] flex flex-col">
+        <div className="min-h-screen bg-gray-50 text-gray-800 h-full flex flex-col relative overflow-hidden font-sans">
 
-            {/* Language Selector - Top Right */}
+            {/* Language Selector: Top Right - Pill Style */}
             <div className="absolute top-6 right-6 z-50">
                 <div className="relative">
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="flex items-center gap-2 px-3 py-2 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition-all duration-300"
+                        className="flex items-center space-x-1 bg-white border border-gray-200 rounded-full px-3 py-1.5 shadow-sm text-sm font-medium text-gray-600 active:bg-gray-50 transition-colors"
                     >
-                        <span className="text-sm font-medium text-gray-700">{language}</span>
-                        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        <span>{language}</span>
+                        <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
                         {isDropdownOpen && (
                             <motion.div
-                                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                className="absolute right-0 mt-2 w-32 bg-white border border-gray-100 rounded-2xl shadow-xl overflow-hidden z-50"
+                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                transition={{ duration: 0.1 }}
+                                className="absolute right-0 mt-2 w-36 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 origin-top-right"
                             >
                                 {(Object.keys(languages) as Language[]).map((lang) => (
                                     <button
@@ -49,7 +48,7 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                                             setLanguage(lang);
                                             setIsDropdownOpen(false);
                                         }}
-                                        className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 ${language === lang ? 'text-[#22C55E] font-medium bg-green-50/50' : 'text-gray-600'
+                                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors flex items-center gap-3 ${language === lang ? 'text-[#28C567] font-medium bg-green-50/30' : 'text-gray-600'
                                             }`}
                                     >
                                         <span className="text-base">{languages[lang].flag}</span>
@@ -62,94 +61,91 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                 </div>
             </div>
 
-            {/* Main Content Container */}
-            <div className="relative z-10 flex flex-col flex-1 w-full max-w-md mx-auto px-8 pt-12 pb-12">
+            {/* Main Content: Aligned to bottom (justify-end) with increased padding (pb-24) as requested */}
+            <main className="flex-grow flex flex-col items-center justify-end px-6 pb-24 w-full max-w-md mx-auto">
 
-                {/* CENTER: Illustration/Logo */}
+                {/* Logo Group & Brand */}
                 <motion.div
-                    className="flex items-center justify-center flex-1 py-8"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                        duration: 0.8,
-                        ease: [0.16, 1, 0.3, 1] // Custom ease for premium feel
-                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="flex flex-col items-center mb-8"
                 >
-                    <div className="relative">
-                        {/* Refined glowing effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-[#4CE3B6]/20 to-[#22C55E]/20 blur-[60px] rounded-full transform scale-125 opacity-60" />
+                    {/* Scaled down Logo (SVG Recreation) */}
+                    <div className="w-24 h-24 mb-2 text-[#28C567]">
+                        <svg viewBox="0 0 100 100" fill="currentColor" className="drop-shadow-sm">
+                            {/* Apple Body shape */}
+                            <path d="M50 90 C 20 90, 10 60, 10 45 C 10 25, 30 20, 40 30 C 45 35, 55 35, 60 30 C 70 20, 90 25, 90 45 C 90 60, 80 90, 50 90 Z" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                            {/* Leaf */}
+                            <path d="M50 25 Q 55 5, 75 10 Q 60 25, 50 25" fill="currentColor" />
+                            {/* Stem */}
+                            <path d="M50 25 Q 45 15, 42 12" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
 
-                        {/* Logo */}
-                        <img
-                            src={logoImage}
-                            alt="HealthScan Logo"
-                            className="w-56 h-56 object-contain relative z-10 drop-shadow-2xl"
-                            style={{ mixBlendMode: 'multiply' }}
-                        />
+                            {/* Fork Illusion */}
+                            <path d="M42 45 L 42 60 Q 42 70, 50 70 Q 58 70, 58 60 L 58 45" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                            <path d="M50 65 L 50 42" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                            <path d="M50 70 L 50 82" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+                        </svg>
                     </div>
+
+                    {/* Brand Name - Constructing it visually */}
+                    <h1 className="text-4xl font-bold tracking-tight text-[#228B49]">
+                        Health<span className="text-[#28C567]">Scan</span>
+                    </h1>
                 </motion.div>
 
-                {/* BOTTOM SECTION: Content & Actions */}
-                <div className="flex flex-col items-center w-full space-y-12">
+                {/* Text Content */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    className="text-center space-y-2 mb-10"
+                >
+                    <h2 className="text-2xl font-semibold text-gray-900">
+                        {t.welcome.title}
+                    </h2>
+                    <p className="text-gray-500 text-base max-w-[260px] mx-auto leading-relaxed">
+                        {t.welcome.subtitle}
+                    </p>
+                </motion.div>
 
-                    {/* Text Content */}
-                    <motion.div
-                        className="flex flex-col items-center text-center space-y-6"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                {/* Action Area */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="w-full space-y-6"
+                >
+                    <button
+                        onClick={onGetStarted}
+                        className="w-full max-w-[280px] mx-auto bg-[#28C567] hover:bg-[#23ad5a] active:scale-[0.98] transition-all text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 text-lg flex items-center justify-center"
                     >
-                        <h1
-                            className="text-gray-900 font-bold tracking-tight"
-                            style={{
-                                fontSize: 'clamp(32px, 8vw, 40px)',
-                                fontFamily: 'Inter, -apple-system, sans-serif',
-                                lineHeight: '1.1',
-                            }}
-                        >
-                            {t.welcome.title}
-                        </h1>
+                        {t.welcome.getStarted}
+                    </button>
+                </motion.div>
 
-                        <p className="text-gray-500 text-lg font-medium leading-relaxed max-w-[280px]">
-                            {t.welcome.subtitle}
-                        </p>
-                    </motion.div>
+            </main>
 
-                    {/* Actions */}
-                    <motion.div
-                        className="w-full flex flex-col items-center space-y-5"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+            {/* Footer / Sign In link */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="pb-8 w-full text-center"
+            >
+                <p className="text-sm text-gray-500 font-medium">
+                    {t.welcome.alreadyHaveAccount}
+                    <button
+                        onClick={onSignIn}
+                        className="text-[#28C567] hover:text-[#228B49] font-bold ml-1 outline-none focus:underline"
                     >
-                        {/* Get Started Button */}
-                        <motion.button
-                            onClick={onGetStarted}
-                            className="w-full h-14 rounded-2xl text-white shadow-lg shadow-[#22C55E]/25 flex items-center justify-center relative overflow-hidden group"
-                            style={{
-                                background: '#22C55E',
-                                fontSize: '1.125rem',
-                                fontWeight: 600,
-                                letterSpacing: '0.01em'
-                            }}
-                            whileHover={{ scale: 1.02, boxShadow: '0 20px 40px rgba(34, 197, 94, 0.35)' }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <span className="relative z-10">{t.welcome.getStarted}</span>
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-                        </motion.button>
+                        {t.welcome.signIn}
+                    </button>
+                </p>
+                {/* Home indicator spacing for iOS aesthetics */}
+                <div className="h-1 w-32 bg-gray-200 rounded mx-auto mt-6 opacity-50"></div>
+            </motion.div>
 
-                        {/* Sign In Link */}
-                        <motion.button
-                            onClick={onSignIn}
-                            className="text-gray-500 hover:text-gray-900 transition-colors duration-300 text-sm font-medium py-2"
-                            whileHover={{ scale: 1.02 }}
-                        >
-                            {t.welcome.alreadyHaveAccount} <span className="text-[#22C55E] font-semibold ml-1">{t.welcome.signIn}</span>
-                        </motion.button>
-                    </motion.div>
-                </div>
-            </div>
         </div>
     );
 }

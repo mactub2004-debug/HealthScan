@@ -22,35 +22,35 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
   const getScoreData = () => {
     if (timeRange === 'week') {
       return [
-        { day: 'Mon', score: 78 },
-        { day: 'Tue', score: 82 },
-        { day: 'Wed', score: 80 },
-        { day: 'Thu', score: 85 },
-        { day: 'Fri', score: 83 },
-        { day: 'Sat', score: 87 },
-        { day: 'Sun', score: 85 }
+        { day: t.common.days.mon, score: 78 },
+        { day: t.common.days.tue, score: 82 },
+        { day: t.common.days.wed, score: 80 },
+        { day: t.common.days.thu, score: 85 },
+        { day: t.common.days.fri, score: 83 },
+        { day: t.common.days.sat, score: 87 },
+        { day: t.common.days.sun, score: 85 }
       ];
     } else if (timeRange === 'month') {
       return [
-        { day: 'Week 1', score: 75 },
-        { day: 'Week 2', score: 80 },
-        { day: 'Week 3', score: 83 },
-        { day: 'Week 4', score: 85 }
+        { day: `${t.common.weekLabel} 1`, score: 75 },
+        { day: `${t.common.weekLabel} 2`, score: 80 },
+        { day: `${t.common.weekLabel} 3`, score: 83 },
+        { day: `${t.common.weekLabel} 4`, score: 85 }
       ];
     } else {
       return [
-        { day: 'Jan', score: 70 },
-        { day: 'Feb', score: 72 },
-        { day: 'Mar', score: 75 },
-        { day: 'Apr', score: 78 },
-        { day: 'May', score: 80 },
-        { day: 'Jun', score: 82 },
-        { day: 'Jul', score: 84 },
-        { day: 'Aug', score: 83 },
-        { day: 'Sep', score: 85 },
-        { day: 'Oct', score: 85 },
-        { day: 'Nov', score: 86 },
-        { day: 'Dec', score: 87 }
+        { day: t.common.months.jan, score: 70 },
+        { day: t.common.months.feb, score: 72 },
+        { day: t.common.months.mar, score: 75 },
+        { day: t.common.months.apr, score: 78 },
+        { day: t.common.months.may, score: 80 },
+        { day: t.common.months.jun, score: 82 },
+        { day: t.common.months.jul, score: 84 },
+        { day: t.common.months.aug, score: 83 },
+        { day: t.common.months.sep, score: 85 },
+        { day: t.common.months.oct, score: 85 },
+        { day: t.common.months.nov, score: 86 },
+        { day: t.common.months.dec, score: 87 }
       ];
     }
   };
@@ -77,7 +77,7 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
           <div className="flex items-center gap-3 mb-2">
             <button
               onClick={onBack}
-              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors -ml-2"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -147,11 +147,22 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
                   width={35}
                 />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    fontSize: '12px'
+                  cursor={{ stroke: '#22C55E', strokeWidth: 1, strokeDasharray: '3 3' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-white p-3 border border-gray-100 rounded-xl shadow-lg animate-in fade-in zoom-in-95 duration-200">
+                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                            <p className="text-lg font-bold text-[#22C55E]">
+                              {payload[0].value}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
                   }}
                 />
                 <Line
@@ -165,7 +176,7 @@ export function StatsScreen({ onBack }: StatsScreenProps) {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              {timeRange === 'week' ? 'Weekly' : timeRange === 'month' ? 'Monthly' : 'Yearly'} {t.stats.trend}
+              {timeRange === 'week' ? t.stats.weeklyOverview : timeRange === 'month' ? t.stats.trend : t.stats.trend}
             </p>
           </div>
         </div>

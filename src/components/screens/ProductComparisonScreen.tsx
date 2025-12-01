@@ -50,8 +50,11 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
       <div className="bg-white border-b border-gray-200 px-6 pt-10 pb-6 sticky top-0 z-10">
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-2">
-            <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full -ml-2">
-              <ChevronLeft className="w-6 h-6" />
+            <button
+              onClick={onBack}
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors -ml-2"
+            >
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <h1>Product Comparison</h1>
           </div>
@@ -63,18 +66,18 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
 
       {/* Products Header Cards */}
       <div className="max-w-md mx-auto px-6 py-6">
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
           {products.map((product) => {
             const statusConfig = getStatusConfig(product.status);
             const StatusIcon = statusConfig.icon;
-            
+
             return (
-              <div 
+              <div
                 key={product.id}
-                className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 snap-center"
               >
                 <div className="relative">
-                  <ImageWithFallback 
+                  <ImageWithFallback
                     src={product.image}
                     alt={product.name}
                     className="w-full h-32 object-cover"
@@ -90,12 +93,12 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
               </div>
             );
           })}
-          
+
           {/* Add product button */}
           {products.length < 3 && onAddProduct && (
             <button
               onClick={onAddProduct}
-              className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 hover:border-[#22C55E] transition-colors flex flex-col items-center justify-center gap-2 h-[232px]"
+              className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 hover:border-[#22C55E] transition-colors flex flex-col items-center justify-center gap-2 h-[232px] snap-center"
             >
               <div className="w-12 h-12 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
                 <Plus className="w-6 h-6 text-[#22C55E]" />
@@ -116,12 +119,11 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
                   <div className="w-20 text-sm text-muted-foreground truncate">{product.brand}</div>
                   <div className="flex-1 flex items-center gap-2">
                     <div className="flex-1 h-3 bg-secondary rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${
-                          product.nutritionScore >= 80 ? 'bg-[#22C55E]' : 
-                          product.nutritionScore >= 60 ? 'bg-[#F97316]' : 
-                          'bg-[#EF4444]'
-                        }`}
+                      <div
+                        className={`h-full ${product.nutritionScore >= 80 ? 'bg-[#22C55E]' :
+                          product.nutritionScore >= 60 ? 'bg-[#F97316]' :
+                            'bg-[#EF4444]'
+                          }`}
                         style={{ width: `${product.nutritionScore}%` }}
                       />
                     </div>
@@ -139,7 +141,7 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
               {products.map((product) => {
                 const statusConfig = getStatusConfig(product.status);
                 const StatusIcon = statusConfig.icon;
-                
+
                 return (
                   <div key={product.id} className="flex items-center justify-between">
                     <div className="w-20 text-sm text-muted-foreground truncate">{product.brand}</div>
@@ -183,7 +185,7 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
               {products.map((product) => (
                 <div key={product.id} className="space-y-2">
                   <p className="text-sm text-muted-foreground">{product.brand}</p>
-                  
+
                   {product.benefits && product.benefits.length > 0 && (
                     <div className="space-y-1">
                       {product.benefits.slice(0, 2).map((benefit, idx) => (
@@ -194,7 +196,7 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
                       ))}
                     </div>
                   )}
-                  
+
                   {product.issues && product.issues.length > 0 && (
                     <div className="space-y-1">
                       {product.issues.slice(0, 2).map((issue, idx) => (
@@ -232,16 +234,16 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
 
         {/* Actions */}
         <div className="mt-6 space-y-3">
-          <Button 
+          <Button
             className="w-full h-14 bg-[#22C55E] text-white hover:bg-[#22C55E]/90 rounded-2xl shadow-md"
-            onClick={() => onNavigate('scan-result', { 
-              product: [...products].sort((a, b) => b.nutritionScore - a.nutritionScore)[0] 
+            onClick={() => onNavigate('scan-result', {
+              product: [...products].sort((a, b) => b.nutritionScore - a.nutritionScore)[0]
             })}
           >
             View Best Product
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
-          <Button 
+          <Button
             variant="outline"
             className="w-full h-14 rounded-2xl"
             onClick={onBack}

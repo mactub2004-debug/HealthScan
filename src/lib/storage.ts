@@ -1,4 +1,5 @@
 import { UserProfile, ScanHistoryItem, Product, demoUserProfile, demoScanHistory } from './demo-data';
+export type { UserProfile };
 
 const KEYS = {
   USER_PROFILE: 'healthscan_user_profile',
@@ -51,14 +52,15 @@ export const StorageService = {
     }
   },
 
-  addScanHistoryItem: (product: Product) => {
+  addScanHistoryItem: (product: Product, isPurchased: boolean = false) => {
     try {
       const history = StorageService.getScanHistory();
       const newItem: ScanHistoryItem = {
         id: crypto.randomUUID(),
         product,
         scannedAt: new Date(),
-        isFavorite: false
+        isFavorite: false,
+        isPurchased
       };
 
       const updatedHistory = [newItem, ...history];
@@ -84,6 +86,20 @@ export const StorageService = {
       return updatedHistory;
     } catch (e) {
       console.error('Error toggling favorite', e);
+      return [];
+    }
+  },
+
+  togglePurchased: (historyId: string) => {
+    try {
+      const history = StorageService.getScanHistory();
+      const updatedHistory = history.map(item =>
+        item.id === historyId ? { ...item, isPurchased: !item.isPurchased } : item
+      );
+      localStorage.setItem(KEYS.SCAN_HISTORY, JSON.stringify(updatedHistory));
+      return updatedHistory;
+    } catch (e) {
+      console.error('Error toggling purchased', e);
       return [];
     }
   },

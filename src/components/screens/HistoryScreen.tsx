@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Clock, GitCompare, Trash2, ArrowRight } from 'lucide-react';
+import { Clock, GitCompare, Trash2, ArrowRight, Loader2 } from 'lucide-react';
 import { demoComparisons, ProductComparison, ScanHistoryItem } from '../../lib/demo-data';
 import { StorageService } from '../../lib/storage';
 import { ProductCard } from '../ProductCard';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { analyzeProductWithAI } from '../../services/ai-analysis.service';
 
 interface HistoryScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [historyItems, setHistoryItems] = useState<ScanHistoryItem[]>([]);
   const [comparisons] = useState(demoComparisons);
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
   useEffect(() => {
     setHistoryItems(StorageService.getScanHistory());
@@ -30,9 +32,10 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
     setHistoryItems(updated);
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
+    const dateObj = new Date(date);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - dateObj.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
 
     if (hours < 24) {
@@ -43,6 +46,40 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
     const days = Math.floor(hours / 24);
     if (days === 1) return t.history.time.yesterday;
     return `${days} ${t.history.time.daysAgo}`;
+  };
+
+  const handleProductClick = async (product: any) => {
+    setIsAnalyzing(product.id);
+
+    try {
+      const userProfile = StorageService.getUserProfile();
+
+      if (userProfile) {
+        // Re-analyze with AI to ensure current language and fresh insights
+        const aiResult = await analyzeProductWithAI(product, userProfile, language);
+
+        // Merge AI results
+        const enrichedProduct = {
+          ...product,
+          status: aiResult.status,
+          nutritionScore: aiResult.nutritionScore,
+          benefits: aiResult.benefits,
+          issues: aiResult.issues,
+          aiDescription: aiResult.aiDescription,
+          ingredients: aiResult.ingredients || product.ingredients,
+          allergens: aiResult.allergens || product.allergens
+        };
+
+        onNavigate('scan-result', { product: enrichedProduct });
+      } else {
+        onNavigate('scan-result', { product });
+      }
+    } catch (error) {
+      console.error('Error analyzing product:', error);
+      onNavigate('scan-result', { product });
+    } finally {
+      setIsAnalyzing(null);
+    }
   };
 
   return (
@@ -93,7 +130,7 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                 {historyItems.map((item) => (
                   <div
                     key={item.id}
-                    className="animate-in fade-in slide-in-from-bottom-4"
+                    className="animate-in fade-in slide-in-from-bottom-4 relative"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -111,11 +148,19 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                     </div>
                     <ProductCard
                       product={item.product}
-                      onClick={() => onNavigate('scan-result', { product: item.product })}
+                      onClick={() => handleProductClick(item.product)}
                       isFavorite={item.isFavorite}
                       onToggleFavorite={() => toggleFavorite(item.product.id)}
                       showFavorite
                     />
+                    {isAnalyzing === item.product.id && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10 top-8">
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="w-8 h-8 text-[#28C567] animate-spin" />
+                          <span className="text-sm font-medium text-[#28C567]">{t.common.loading}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -139,54 +184,28 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
                   <div
                     key={comparison.id}
                     className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                    onClick={() => {
-                      // Navigate to comparison view - for now go to first product
-                      onNavigate('scan-result', { product: comparison.products[0] });
-                    }}
+                    onClick={() => handleProductClick(comparison.products[0])}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <GitCompare className="w-4 h-4 text-[#22C55E]" />
                         <h3>{comparison.title}</h3>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(comparison.createdAt)}
-                      </p>
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
                     </div>
-
-                    <div className="flex items-center gap-3">
-                      {comparison.products.map((product, index) => (
-                        <div key={product.id} className="flex items-center flex-1">
-                          <div className="relative flex-1">
-                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                              <ImageWithFallback
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-20 object-cover rounded-lg mb-2"
-                              />
-                              <p className="text-xs mb-0.5 line-clamp-1">{product.name}</p>
-                              <div className="flex items-center gap-1">
-                                <div className={`w-2 h-2 rounded-full ${product.status === 'suitable' ? 'bg-[#22C55E]' :
-                                  product.status === 'questionable' ? 'bg-[#F97316]' :
-                                    'bg-[#EF4444]'
-                                  }`} />
-                                <span className="text-xs text-muted-foreground">
-                                  Score: {product.nutritionScore}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {index < comparison.products.length - 1 && (
-                            <ArrowRight className="w-4 h-4 text-muted-foreground mx-2 flex-shrink-0" />
-                          )}
+                    <div className="flex items-center gap-2">
+                      {comparison.products.map((p, i) => (
+                        <div key={i} className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-100">
+                          <ImageWithFallback
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       ))}
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-xs text-[#22C55E] text-center">
-                        {t.history.viewComparison}
-                      </p>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {formatDate(comparison.createdAt)}
+                      </span>
                     </div>
                   </div>
                 ))}

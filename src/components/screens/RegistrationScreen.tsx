@@ -28,11 +28,17 @@ export function RegistrationScreen({ onComplete }: RegistrationScreenProps) {
 
   const toggleSelection = (category: 'allergies' | 'preferences' | 'goals', item: string) => {
     if (category === 'goals') {
-      // Single select for goals
-      setFormData(prev => ({
-        ...prev,
-        [category]: prev[category].includes(item) ? [] : [item]
-      }));
+      // Max 2 selection for goals
+      setFormData(prev => {
+        const current = prev[category];
+        if (current.includes(item)) {
+          return { ...prev, [category]: current.filter(i => i !== item) };
+        }
+        if (current.length >= 2) {
+          return prev; // Max reached
+        }
+        return { ...prev, [category]: [...current, item] };
+      });
     } else {
       // Multi select for others
       setFormData(prev => ({
@@ -98,6 +104,7 @@ export function RegistrationScreen({ onComplete }: RegistrationScreenProps) {
                 <Label htmlFor="name" className="text-sm mb-2 block">{t.registration.step1.nameLabel}</Label>
                 <Input
                   id="name"
+                  autoComplete="name"
                   placeholder={t.registration.step1.namePlaceholder}
                   maxLength={20}
                   value={formData.name}
@@ -113,6 +120,7 @@ export function RegistrationScreen({ onComplete }: RegistrationScreenProps) {
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder={t.registration.step1.emailPlaceholder}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -121,7 +129,7 @@ export function RegistrationScreen({ onComplete }: RegistrationScreenProps) {
               </div>
               <div>
                 <Label htmlFor="country" className="text-sm mb-2 block">{t.registration.step1.countryLabel}</Label>
-                <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
+                <Select value={formData.country} onValueChange={(value: string) => setFormData({ ...formData, country: value })}>
                   <SelectTrigger className="bg-white h-12 rounded-xl">
                     <SelectValue placeholder={t.registration.step1.countryPlaceholder} />
                   </SelectTrigger>

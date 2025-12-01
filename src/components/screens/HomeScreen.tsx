@@ -1,30 +1,39 @@
 import { useState, useEffect } from 'react';
-import { Scan, Sparkles, Users, Lightbulb, TrendingUp } from 'lucide-react';
+import { Scan, Sparkles, Users, Lightbulb, TrendingUp, Loader2 } from 'lucide-react';
 import { demoProducts } from '../../lib/demo-data';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { StorageService, UserProfile } from '../../lib/storage';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { analyzeProductWithAI } from '../../services/ai-analysis.service';
 
 interface HomeScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function HomeScreen({ onNavigate }: HomeScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [scanHistory, setScanHistory] = useState<any[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
   useEffect(() => {
     const profile = StorageService.getUserProfile();
     setUserProfile(profile);
+    const history = StorageService.getScanHistory();
+    setScanHistory(history);
   }, []);
 
-  const recommendedProducts = [
-    demoProducts[0], // Suitable
-    demoProducts[1], // Questionable
-    demoProducts[3], // Suitable
-  ];
+  // Calculate real stats from purchased items only
+  const purchasedItems = scanHistory.filter(item => item.isPurchased);
+  const scanCount = purchasedItems.length;
+  const averageScore = scanCount > 0
+    ? Math.round(purchasedItems.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
+    : 0;
 
-  const getStatusConfig = (status: string) => {
+  // Get recommended products (just taking first 3 as demo since status is dynamic)
+  const recommendedProducts = demoProducts.slice(0, 3);
+
+  const getStatusConfig = (status?: string) => {
     switch (status) {
       case 'suitable':
         return {
@@ -57,6 +66,38 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
     }
   };
 
+  const handleProductClick = async (product: any) => {
+    setIsAnalyzing(product.id);
+
+    try {
+      if (userProfile) {
+        // Analyze with AI
+        const aiResult = await analyzeProductWithAI(product, userProfile, language);
+
+        // Merge AI results
+        const enrichedProduct = {
+          ...product,
+          status: aiResult.status,
+          nutritionScore: aiResult.nutritionScore,
+          benefits: aiResult.benefits,
+          issues: aiResult.issues,
+          aiDescription: aiResult.aiDescription,
+          ingredients: aiResult.ingredients || product.ingredients,
+          allergens: aiResult.allergens || product.allergens
+        };
+
+        onNavigate('scan-result', { product: enrichedProduct });
+      } else {
+        onNavigate('scan-result', { product });
+      }
+    } catch (error) {
+      console.error('Error analyzing product:', error);
+      onNavigate('scan-result', { product });
+    } finally {
+      setIsAnalyzing(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       <div className="max-w-md mx-auto">
@@ -69,7 +110,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
             </div>
             <button
               onClick={() => onNavigate('profile')}
-              className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-shadow border border-gray-100"
+              className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center hover:shadow-md transition-all active:scale-95 border border-gray-100"
             >
               <div className="w-10 h-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
                 <span className="text-lg">👤</span>
@@ -78,70 +119,53 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards or Empty State */}
         <div className="px-6 pb-7">
-          <div className="grid grid-cols-2 gap-3">
-            {/* Products Scanned */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="w-14 h-14 bg-[#22C55E] rounded-full flex items-center justify-center mb-3 mx-auto shadow-sm">
-                <Scan className="w-7 h-7 text-white" />
+          {scanCount === 0 ? (
+            // Empty State
+            <div className="bg-gradient-to-br from-[#22C55E]/10 to-[#22C55E]/5 rounded-2xl p-8 border-2 border-dashed border-[#22C55E]/30 text-center">
+              <div className="w-20 h-20 bg-[#22C55E] rounded-full flex items-center justify-center mb-4 mx-auto shadow-lg">
+                <Scan className="w-10 h-10 text-white" />
               </div>
-              <div className="text-center">
-                <p className="mb-1">47</p>
-                <p className="text-xs text-muted-foreground leading-tight">{t.stats.scannedProducts}</p>
+              <h3 className="text-lg font-semibold mb-2">{t.home.emptyState.title}</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                {t.home.emptyState.description}
+              </p>
+              <button
+                onClick={() => onNavigate('scan')}
+                className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
+              >
+                {t.home.scanProduct}
+              </button>
+            </div>
+          ) : (
+            // Stats Cards
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                  <Scan className="w-4 h-4" />
+                  <span className="text-xs font-medium">{t.stats.totalScans}</span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{scanCount}</p>
+              </div>
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-xs font-medium">{t.stats.nutritionScore}</span>
+                </div>
+                <p className="text-2xl font-bold text-[#22C55E]">{averageScore}</p>
               </div>
             </div>
-
-            {/* Health Score */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <div className="w-14 h-14 bg-[#F97316] rounded-full flex items-center justify-center mb-3 mx-auto shadow-sm">
-                <TrendingUp className="w-7 h-7 text-white" />
-              </div>
-              <div className="text-center">
-                <p className="mb-1">85</p>
-                <p className="text-xs text-muted-foreground leading-tight">{t.stats.nutritionScore}</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="px-6 pb-7">
-          <h3 className="mb-4 text-center">{t.home.quickActions}</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {/* Smart Picks */}
-            <button
-              onClick={() => onNavigate('recommendations')}
-              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center border border-gray-100"
-            >
-              <div className="w-16 h-16 bg-[#F97316]/10 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
-                <Sparkles className="w-8 h-8 text-[#F97316]" />
-              </div>
-              <p>{t.home.smartPicks}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t.home.forYou}</p>
-            </button>
-
-            {/* Community */}
-            <button
-              onClick={() => onNavigate('search')}
-              className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center justify-center text-center border border-gray-100"
-            >
-              <div className="w-16 h-16 bg-[#3B82F6]/10 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
-                <Users className="w-8 h-8 text-[#3B82F6]" />
-              </div>
-              <p>{t.home.community}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t.home.topRated}</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Recommended for You */}
-        <div className="pb-6">
-          <div className="flex items-center justify-between mb-4 px-6">
+        {/* Recommended Section */}
+        <div className="mb-8">
+          <div className="px-6 flex items-center justify-between mb-4">
             <h3>{t.home.recommended}</h3>
             <button
-              onClick={() => onNavigate('recommendations')}
-              className="text-sm text-[#22C55E] hover:text-[#22C55E]/80 transition-colors"
+              onClick={() => onNavigate('search')}
+              className="text-sm text-[#22C55E] font-medium hover:underline"
             >
               {t.home.viewAll}
             </button>
@@ -153,8 +177,8 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
               return (
                 <div
                   key={product.id}
-                  onClick={() => onNavigate('scan-result', { product })}
-                  className="flex-shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-gray-100"
+                  onClick={() => handleProductClick(product)}
+                  className="relative flex-shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 border border-gray-100"
                 >
                   {/* Product Image */}
                   <div className="relative w-full h-40">
@@ -181,12 +205,22 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-[#22C55E] rounded-full transition-all"
-                          style={{ width: `${product.nutritionScore}%` }}
+                          style={{ width: `${product.nutritionScore || 0}%` }}
                         />
                       </div>
-                      <span className="text-xs min-w-[2rem] text-right">{product.nutritionScore}</span>
+                      <span className="text-xs min-w-[2rem] text-right">{product.nutritionScore || '?'}</span>
                     </div>
                   </div>
+
+                  {/* Loading Overlay */}
+                  {isAnalyzing === product.id && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 text-[#28C567] animate-spin" />
+                        <span className="text-sm font-medium text-[#28C567]">{t.common.loading}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

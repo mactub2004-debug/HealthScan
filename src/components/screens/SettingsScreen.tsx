@@ -7,6 +7,9 @@ import { Label } from '../ui/label';
 import { demoUserProfile, countries, languages } from '../../lib/demo-data';
 import { StorageService } from '../../lib/storage';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SettingsScreenProps {
   onNavigate: (screen: string) => void;
@@ -14,7 +17,9 @@ interface SettingsScreenProps {
 }
 
 export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
+  const { setLanguage, t } = useLanguage();
   const [profileData, setProfileData] = useState(demoUserProfile);
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     const storedProfile = StorageService.getUserProfile();
@@ -25,8 +30,21 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
 
   const handleSave = () => {
     StorageService.saveUserProfile(profileData);
-    // Optional: Show success message
-    alert('Profile saved successfully!');
+    // Sync language with app context
+    if (profileData.language) {
+      // Map full language name to code
+      const langMap: Record<string, 'EN' | 'ES'> = {
+        'English': 'EN',
+        'Español': 'ES',
+        'EN': 'EN',
+        'ES': 'ES'
+      };
+      const langCode = langMap[profileData.language] || 'ES';
+      setLanguage(langCode);
+    }
+
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   return (
@@ -37,22 +55,23 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
           <div className="flex items-center gap-4 mb-2">
             <button
               onClick={() => onNavigate('profile')}
-              className="p-2 hover:bg-gray-100 rounded-full -ml-2"
+              className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors -ml-2"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <h1>Settings & Preferences</h1>
+            <h1>{t.settings.title}</h1>
           </div>
         </div>
 
         {/* Profile Section */}
         <div className="px-6 py-6">
-          <h3 className="mb-4">Profile Information</h3>
+          <h3 className="mb-4">{t.settings.profile.title}</h3>
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
             <div>
-              <Label htmlFor="name" className="text-sm mb-2 block">Full Name</Label>
+              <Label htmlFor="name" className="text-sm mb-2 block">{t.settings.profile.name}</Label>
               <Input
                 id="name"
+                autoComplete="name"
                 value={profileData.name}
                 onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                 className="bg-[#F8F9FA]"
@@ -60,10 +79,11 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-sm mb-2 block">Email</Label>
+              <Label htmlFor="email" className="text-sm mb-2 block">{t.settings.profile.email}</Label>
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={profileData.email}
                 onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                 className="bg-[#F8F9FA]"
@@ -71,10 +91,10 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
             </div>
 
             <div>
-              <Label htmlFor="country" className="text-sm mb-2 block">Country</Label>
-              <Select value={profileData.country} onValueChange={(value) => setProfileData({ ...profileData, country: value })}>
+              <Label htmlFor="country" className="text-sm mb-2 block">{t.settings.profile.country}</Label>
+              <Select value={profileData.country} onValueChange={(value: string) => setProfileData({ ...profileData, country: value })}>
                 <SelectTrigger className="bg-[#F8F9FA]">
-                  <SelectValue placeholder="Select country" />
+                  <SelectValue placeholder={t.settings.profile.selectCountry} />
                 </SelectTrigger>
                 <SelectContent>
                   {countries.map((country) => (
@@ -87,10 +107,10 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
             </div>
 
             <div>
-              <Label htmlFor="language" className="text-sm mb-2 block">Language</Label>
-              <Select value={profileData.language} onValueChange={(value) => setProfileData({ ...profileData, language: value })}>
+              <Label htmlFor="language" className="text-sm mb-2 block">{t.settings.profile.language}</Label>
+              <Select value={profileData.language} onValueChange={(value: string) => setProfileData({ ...profileData, language: value })}>
                 <SelectTrigger className="bg-[#F8F9FA]">
-                  <SelectValue placeholder="Select language" />
+                  <SelectValue placeholder={t.settings.profile.selectLanguage} />
                 </SelectTrigger>
                 <SelectContent>
                   {languages.map((lang) => (
@@ -107,23 +127,23 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
               className="w-full bg-[#22C55E] text-white hover:bg-[#22C55E]/90"
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Changes
+              {t.settings.profile.save}
             </Button>
           </div>
         </div>
 
         {/* Dietary Preferences */}
         <div className="px-6 pb-6">
-          <h3 className="mb-4">Dietary Preferences</h3>
+          <h3 className="mb-4">{t.settings.dietary.title}</h3>
           <div className="space-y-3">
             <button className="w-full bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap3">
                   <div className="w-12 h-12 bg-[#EF4444]/10 rounded-2xl flex items-center justify-center">
                     <Shield className="w-6 h-6 text-[#EF4444]" />
                   </div>
                   <div>
-                    <p>Manage Allergies</p>
+                    <p>{t.settings.dietary.allergies}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {profileData.allergies.join(', ')}
                     </p>
@@ -139,7 +159,7 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
                     <Globe className="w-6 h-6 text-[#22C55E]" />
                   </div>
                   <div>
-                    <p>Diet Preferences</p>
+                    <p>{t.settings.dietary.preferences}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {profileData.preferences.join(', ')}
                     </p>
@@ -152,14 +172,14 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
 
         {/* App Settings */}
         <div className="px-6 pb-6">
-          <h3 className="mb-4">App Settings</h3>
+          <h3 className="mb-4">{t.settings.app.title}</h3>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-100">
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#F97316]/10 rounded-xl flex items-center justify-center">
                   <Bell className="w-5 h-5 text-[#F97316]" />
                 </div>
-                <p>Notifications</p>
+                <p>{t.settings.app.notifications}</p>
               </div>
               <Switch />
             </div>
@@ -169,7 +189,7 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
                 <div className="w-10 h-10 bg-[#3B82F6]/10 rounded-xl flex items-center justify-center">
                   <Moon className="w-5 h-5 text-[#3B82F6]" />
                 </div>
-                <p>Dark Mode</p>
+                <p>{t.settings.app.darkMode}</p>
               </div>
               <Switch />
             </div>
@@ -184,8 +204,8 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
                 <HelpCircle className="w-6 h-6 text-gray-600" />
               </div>
               <div>
-                <p>Help & FAQ</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Get help and support</p>
+                <p>{t.settings.support.help}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t.settings.support.helpDesc}</p>
               </div>
             </div>
           </button>
@@ -196,6 +216,23 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
           <p className="text-sm text-muted-foreground">HealthScan v1.0.0</p>
         </div>
       </div>
+
+      {/* Aesthetic Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#22C55E] text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3 z-50"
+          >
+            <div className="bg-white/20 rounded-full p-1">
+              <Check className="w-4 h-4" />
+            </div>
+            <span className="font-medium">{t.settings.profile.savedSuccess}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

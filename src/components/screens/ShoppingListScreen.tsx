@@ -295,7 +295,7 @@ function ShoppingListItemComponent({
   return (
     <div className={`relative overflow-hidden rounded-2xl ${isCompleted ? 'opacity-60' : ''}`}>
       {/* Delete background (revealed on swipe) */}
-      <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6">
+      <div className={`absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6 transition-opacity duration-200 ${swipedItem === item.id ? 'opacity-100' : 'opacity-0'}`}>
         <Trash2 className="w-6 h-6 text-white" />
       </div>
 
@@ -305,7 +305,7 @@ function ShoppingListItemComponent({
         onTouchMove={(e) => handleTouchMove(e, item.id)}
         onTouchEnd={handleTouchEnd}
         onClick={onToggle} // Click anywhere to toggle
-        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-transform duration-200 active:scale-[0.99] transition-all"
+        className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3 relative transition-all duration-200 active:scale-[0.99]"
         style={{
           transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
         }}

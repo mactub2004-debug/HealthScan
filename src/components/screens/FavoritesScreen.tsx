@@ -13,10 +13,9 @@ interface FavoritesScreenProps {
 export function FavoritesScreen({ onNavigate, onBack }: FavoritesScreenProps) {
   const { t } = useLanguage();
   const [favoriteItems, setFavoriteItems] = useState<ScanHistoryItem[]>([]);
-  const [draggedItem, setDraggedItem] = useState<string | null>(null);
-  const [dragY, setDragY] = useState<number>(0);
-  const dragStartY = useRef<number>(0);
-  const deleteThreshold = 100; // pixels to drag up to delete
+  const [swipedItem, setSwipedItem] = useState<string | null>(null);
+  const touchStartX = useRef<number>(0);
+  const touchCurrentX = useRef<number>(0);
 
   useEffect(() => {
     const history = StorageService.getScanHistory();
@@ -24,38 +23,41 @@ export function FavoritesScreen({ onNavigate, onBack }: FavoritesScreenProps) {
   }, []);
 
   const handleTouchStart = (e: React.TouchEvent, id: string) => {
-    dragStartY.current = e.touches[0].clientY;
-    setDraggedItem(id);
-    setDragY(0);
+    touchStartX.current = e.touches[0].clientX;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!draggedItem) return;
-    const currentY = e.touches[0].clientY;
-    const diff = dragStartY.current - currentY;
-
-    // Only allow dragging upwards
-    if (diff > 0) {
-      setDragY(diff);
-    }
+    touchCurrentX.current = e.touches[0].clientX;
   };
 
-  const handleTouchEnd = () => {
-    if (!draggedItem) return;
+  const handleTouchEnd = (id: string) => {
+    if (!touchStartX.current || !touchCurrentX.current) return;
 
-    // If dragged past threshold, delete the item (unfavorite)
-    if (dragY > deleteThreshold) {
-      // Find the item to get the product ID
-      const itemToRemove = favoriteItems.find(item => item.id === draggedItem);
-      if (itemToRemove) {
-        const updatedHistory = StorageService.toggleFavorite(itemToRemove.product.id);
-        setFavoriteItems(updatedHistory.filter(item => item.isFavorite));
-      }
+    const diff = touchStartX.current - touchCurrentX.current;
+    const threshold = 50;
+
+    // Swipe left (diff > 0) to show delete
+    if (diff > threshold) {
+      setSwipedItem(id);
+    } else if (diff < -threshold) {
+      // Swipe right to hide
+      setSwipedItem(null);
+    } else {
+      // Tap or small movement, do nothing or reset if needed
+      // If we want to toggle on tap, we handle that in onClick
     }
 
-    setDraggedItem(null);
-    setDragY(0);
-    dragStartY.current = 0;
+    touchStartX.current = 0;
+    touchCurrentX.current = 0;
+  };
+
+  const handleDelete = (id: string) => {
+    const itemToRemove = favoriteItems.find(item => item.id === id);
+    if (itemToRemove) {
+      const updatedHistory = StorageService.toggleFavorite(itemToRemove.product.id);
+      setFavoriteItems(updatedHistory.filter(item => item.isFavorite));
+    }
+    setSwipedItem(null);
   };
 
   return (
@@ -64,8 +66,8 @@ export function FavoritesScreen({ onNavigate, onBack }: FavoritesScreenProps) {
       <div className="bg-white border-b border-gray-200 px-6 pt-10 pb-6 sticky top-0 z-10">
         <div className="max-w-md mx-auto">
           <div className="flex items-center gap-3 mb-2">
-            <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full -ml-2">
-              <ChevronLeft className="w-6 h-6" />
+            <button onClick={onBack} className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors -ml-2">
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
               <h1>{t.favorites.title}</h1>
@@ -79,19 +81,6 @@ export function FavoritesScreen({ onNavigate, onBack }: FavoritesScreenProps) {
           </p>
         </div>
       </div>
-
-      {/* Delete zone indicator */}
-      {draggedItem && dragY > 50 && (
-        <div
-          className={`fixed top-0 left-0 right-0 bg-[#EF4444] text-white flex items-center justify-center transition-all duration-200 z-20 ${dragY > deleteThreshold ? 'py-8' : 'py-4'
-            }`}
-        >
-          <Trash2 className={`mr-2 transition-all duration-200 ${dragY > deleteThreshold ? 'w-6 h-6' : 'w-5 h-5'}`} />
-          <span className={dragY > deleteThreshold ? 'font-medium' : ''}>
-            {dragY > deleteThreshold ? t.favorites.releaseHint : t.favorites.deleteHint}
-          </span>
-        </div>
-      )}
 
       {/* Content */}
       <div className="max-w-md mx-auto px-6 py-6">
@@ -108,28 +97,54 @@ export function FavoritesScreen({ onNavigate, onBack }: FavoritesScreenProps) {
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground text-center mb-4">
-              {t.favorites.dragHint}
+              {t.favorites.dragHint.replace('up', 'left')} {/* Adjust text dynamically or we should update translation later */}
             </p>
             {favoriteItems.map((item, index) => (
               <div
                 key={item.id}
-                className={`animate-in fade-in slide-in-from-bottom-4 transition-all duration-200 ${draggedItem === item.id ? 'opacity-80 scale-95' : ''
-                  }`}
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                  transform: draggedItem === item.id ? `translateY(-${dragY}px)` : 'translateY(0)',
-                }}
-                onTouchStart={(e) => handleTouchStart(e, item.id)}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+                className="relative overflow-hidden rounded-2xl"
               >
-                <ProductCard
-                  product={item.product}
-                  onClick={() => !draggedItem && onNavigate('scan-result', { product: item.product })}
-                  showDate
-                  date={item.scannedAt}
-                  isFavorite={true}
-                />
+                {/* Delete background (revealed on swipe) */}
+                <div className="absolute inset-0 bg-[#EF4444] flex items-center justify-end px-6 rounded-2xl">
+                  <Trash2 className="w-6 h-6 text-white" />
+                </div>
+
+                <div
+                  className="relative bg-white transition-transform duration-200 ease-out"
+                  style={{
+                    transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)'
+                  }}
+                  onTouchStart={(e) => handleTouchStart(e, item.id)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={() => handleTouchEnd(item.id)}
+                >
+                  <ProductCard
+                    product={item.product}
+                    onClick={() => {
+                      if (swipedItem === item.id) {
+                        setSwipedItem(null); // Close swipe on click if open
+                      } else {
+                        onNavigate('scan-result', { product: item.product });
+                      }
+                    }}
+                    showDate
+                    date={item.scannedAt}
+                    isFavorite={true}
+                  />
+                </div>
+
+                {/* Delete button overlay for clickability when swiped */}
+                {swipedItem === item.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.id);
+                    }}
+                    className="absolute right-0 top-0 bottom-0 w-20 flex items-center justify-center z-10"
+                  >
+                    <span className="sr-only">Delete</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>

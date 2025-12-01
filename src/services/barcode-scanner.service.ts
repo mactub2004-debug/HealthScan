@@ -37,7 +37,7 @@ export class BarcodeScannerService {
                 device.label.toLowerCase().includes('environment')
             ) || videoInputDevices[0];
 
-            // Start continuous scanning
+            // Start continuous scanning with hints for better detection
             this.codeReader.decodeFromVideoDevice(
                 selectedDevice.deviceId,
                 videoElement,

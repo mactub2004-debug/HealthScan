@@ -1,4 +1,4 @@
-import { ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Heart, Share2, Camera, GitCompare } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Share2, Camera, GitCompare, Sparkles } from 'lucide-react';
 import { Product, demoProducts, demoScanHistory } from '../../lib/demo-data';
 import { StorageService } from '../../lib/storage';
 import { Button } from '../ui/button';
@@ -6,13 +6,8 @@ import { Badge } from '../ui/badge';
 import { ProductCard } from '../ProductCard';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { ComparisonDialog } from '../ComparisonDialog';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ScanResultScreenProps {
   product: Product;
@@ -21,64 +16,94 @@ interface ScanResultScreenProps {
 }
 
 export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScreenProps) {
+  const { t } = useLanguage();
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [showComparisonDialog, setShowComparisonDialog] = useState(false);
 
   useEffect(() => {
     // Save to history when screen loads
-    StorageService.addScanHistoryItem(product);
+    const newItem = StorageService.addScanHistoryItem(product);
+    if (newItem) {
+      setCurrentHistoryId(newItem.id);
+    }
 
-    // Check if product is already in favorites
+    // Check if product is already in favorites or purchased
     const history = StorageService.getScanHistory();
     const historyItem = history.find(item => item.product.id === product.id);
-    if (historyItem?.isFavorite) {
-      setIsFavorite(true);
+    if (historyItem) {
+      setIsFavorite(historyItem.isFavorite || false);
+      setIsPurchased(historyItem.isPurchased || false);
     }
   }, [product]);
 
-  const handleToggleFavorite = () => {
-    StorageService.toggleFavorite(product.id);
-    setIsFavorite(!isFavorite);
+  const handleTogglePurchased = () => {
+    if (currentHistoryId) {
+      StorageService.togglePurchased(currentHistoryId);
+      setIsPurchased(!isPurchased);
+    }
   };
 
-  const getStatusConfig = (status: Product['status']) => {
+  const getStatusConfig = (status?: Product['status']) => {
     switch (status) {
       case 'suitable':
         return {
           icon: CheckCircle2,
           color: 'text-[#22C55E]',
           bg: 'bg-[#22C55E]',
-          label: 'Suitable for You',
-          description: 'This product matches your dietary profile and health goals.'
+          label: t.scanResult.status.suitable.label,
+          description: t.scanResult.status.suitable.description
         };
       case 'questionable':
         return {
           icon: AlertTriangle,
           color: 'text-[#F97316]',
           bg: 'bg-[#F97316]',
-          label: 'Review Needed',
-          description: 'This product has some concerns. Check the details below.'
+          label: t.scanResult.status.questionable.label,
+          description: t.scanResult.status.questionable.description
         };
       case 'not-recommended':
         return {
           icon: XCircle,
           color: 'text-[#EF4444]',
           bg: 'bg-[#EF4444]',
-          label: 'Not Recommended',
-          description: 'This product conflicts with your dietary profile.'
+          label: t.scanResult.status.notRecommended.label,
+          description: t.scanResult.status.notRecommended.description
+        };
+      default:
+        return {
+          icon: AlertTriangle,
+          color: 'text-gray-500',
+          bg: 'bg-gray-500',
+          label: t.home.status.unknown,
+          description: ''
         };
     }
   };
+
+  const renderMarkdown = (text: string) => {
+    if (!text) return null;
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
+  if (!product) return null;
 
   const statusConfig = getStatusConfig(product.status);
   const StatusIcon = statusConfig.icon;
 
   const alternativeProducts = demoProducts
-    .filter(p => p.id !== product.id && p.status === 'suitable' && p.category === product.category)
+    .filter(p => p && p.id && p.id !== product.id && p.status === 'suitable' && p.category === product.category)
     .slice(0, 2);
 
   const historyProducts = demoScanHistory
-    .filter(item => item.product.id !== product.id)
+    .filter(item => item && item.product && item.product.id && item.product.id !== product.id)
     .map(item => item.product)
     .slice(0, 5);
 
@@ -126,8 +151,8 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
               <div className="flex items-center gap-2 mt-2">
                 <Badge variant="secondary">{product.category}</Badge>
                 <div className="flex items-center gap-1 ml-auto">
-                  <span className="text-sm text-muted-foreground">Nutrition Score:</span>
-                  <span className={statusConfig.color}>{product.nutritionScore}/100</span>
+                  <span className="text-sm text-muted-foreground">{t.scanResult.nutritionScore}</span>
+                  <span className={statusConfig.color}>{product.nutritionScore || '?'}/100</span>
                 </div>
               </div>
             </div>
@@ -135,17 +160,19 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
 
           {/* AI-Generated Description */}
           {product.aiDescription && (
-            <div className="mt-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#22C55E] to-[#3B82F6] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-white text-xs">AI</span>
+            <div className="mt-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-full ${statusConfig.bg} flex items-center justify-center`}>
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="mb-2">Personalized Analysis</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {product.aiDescription}
-                  </p>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">{t.scanResult.analysis.title}</h2>
+                  <p className="text-xs text-muted-foreground">{t.scanResult.analysis.subtitle}</p>
                 </div>
+              </div>
+
+              <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                {renderMarkdown(product.aiDescription)}
               </div>
             </div>
           )}
@@ -155,7 +182,7 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
             <div className="mt-4 space-y-3">
               {product.benefits && product.benefits.length > 0 && (
                 <div className="bg-[#22C55E]/10 rounded-2xl p-4 border border-[#22C55E]/20">
-                  <h3 className="text-[#22C55E]">Benefits</h3>
+                  <h3 className="text-[#22C55E]">{t.scanResult.analysis.benefits}</h3>
                   <ul className="mt-2 space-y-1">
                     {product.benefits.map((benefit, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
@@ -169,7 +196,7 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
 
               {product.issues && product.issues.length > 0 && (
                 <div className="bg-[#EF4444]/10 rounded-2xl p-4 border border-[#EF4444]/20">
-                  <h3 className="text-[#EF4444]">Concerns</h3>
+                  <h3 className="text-[#EF4444]">{t.scanResult.analysis.concerns}</h3>
                   <ul className="mt-2 space-y-1">
                     {product.issues.map((issue, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
@@ -185,7 +212,7 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
 
           {/* Ingredients */}
           <div className="mt-4 bg-card rounded-2xl p-4 border border-border">
-            <h3>Ingredients</h3>
+            <h3>{t.scanResult.ingredients}</h3>
             <div className="flex flex-wrap gap-2 mt-3">
               {product.ingredients.map((ingredient, index) => (
                 <Badge key={index} variant="secondary">
@@ -198,7 +225,7 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
           {/* Allergens */}
           {product.allergens.length > 0 && (
             <div className="mt-4 bg-card rounded-2xl p-4 border border-border">
-              <h3>Allergen Information</h3>
+              <h3>{t.scanResult.allergens}</h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 {product.allergens.map((allergen, index) => (
                   <Badge key={index} variant="destructive" className="bg-[#EF4444]">
@@ -213,12 +240,12 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
           {alternativeProducts.length > 0 && (
             <div className="mt-6 mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h3>Better Alternatives</h3>
+                <h3>{t.scanResult.alternatives.title}</h3>
                 <button
                   onClick={() => onNavigate('recommendations')}
                   className="text-sm text-[#22C55E] hover:text-[#22C55E]/80 transition-colors"
                 >
-                  See all
+                  {t.scanResult.alternatives.seeAll}
                 </button>
               </div>
               <div className="space-y-3">
@@ -245,107 +272,63 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
               onClick={onBack}
             >
               <Camera className="w-5 h-5 mr-2" />
-              Scan Another
+              {t.scanResult.actions.scanAnother}
             </Button>
-            <Button
-              variant="outline"
-              className="w-full h-14 rounded-2xl"
-              onClick={() => setShowComparisonDialog(true)}
-            >
-              <GitCompare className="w-5 h-5 mr-2" />
-              Compare with Other Products
-            </Button>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                className="h-14 rounded-2xl"
+                onClick={() => setShowComparisonDialog(true)}
+              >
+                <GitCompare className="w-5 h-5 mr-2" />
+                {t.scanResult.actions.compare}
+              </Button>
+              <Button
+                variant={isPurchased ? "default" : "outline"}
+                className={`h-14 rounded-2xl ${isPurchased ? 'bg-[#22C55E] hover:bg-[#22C55E]/90 text-white' : ''}`}
+                onClick={handleTogglePurchased}
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill={isPurchased ? "currentColor" : "none"}
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {isPurchased ? t.scanResult.actions.purchased : t.scanResult.actions.markAsPurchased}
+              </Button>
+            </div>
+
             {alternativeProducts.length > 0 && (
               <Button
                 variant="outline"
                 className="w-full h-14 rounded-2xl"
                 onClick={() => onNavigate('recommendations')}
               >
-                View Similar Products
+                {t.scanResult.actions.viewSimilar}
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Comparison Dialog */}
-      <Dialog open={showComparisonDialog} onOpenChange={setShowComparisonDialog}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Compare Products</DialogTitle>
-            <DialogDescription>
-              Choose a product from your history to compare with {product.name}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 mt-4">
-            {/* Option to scan new product */}
-            <button
-              onClick={() => {
-                setShowComparisonDialog(false);
-                onNavigate('camera');
-              }}
-              className="w-full bg-gradient-to-br from-[#22C55E]/10 to-[#22C55E]/5 rounded-2xl p-4 border border-[#22C55E]/20 hover:border-[#22C55E]/40 transition-all text-left"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-[#22C55E] flex items-center justify-center">
-                  <Camera className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <p>Scan New Product</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Use camera to scan another product
-                  </p>
-                </div>
-              </div>
-            </button>
-
-            {/* History products */}
-            {historyProducts.length > 0 && (
-              <>
-                <div className="flex items-center gap-2 mt-4 mb-2">
-                  <div className="h-px bg-border flex-1" />
-                  <span className="text-xs text-muted-foreground">or choose from history</span>
-                  <div className="h-px bg-border flex-1" />
-                </div>
-
-                {historyProducts.map((historyProduct) => {
-                  const statusConfig = getStatusConfig(historyProduct.status);
-                  const StatusIcon = statusConfig.icon;
-
-                  return (
-                    <button
-                      key={historyProduct.id}
-                      onClick={() => {
-                        setShowComparisonDialog(false);
-                        onNavigate('comparison', { products: [product, historyProduct] });
-                      }}
-                      className="w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all text-left"
-                    >
-                      <div className="flex items-center gap-3 p-3">
-                        <ImageWithFallback
-                          src={historyProduct.image}
-                          alt={historyProduct.name}
-                          className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground">{historyProduct.brand}</p>
-                          <p className="text-sm mt-0.5 truncate">{historyProduct.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <StatusIcon className={`w-3 h-3 ${statusConfig.color}`} />
-                            <span className={`text-xs ${statusConfig.color}`}>{statusConfig.label}</span>
-                            <span className="text-xs text-muted-foreground ml-auto">Score: {historyProduct.nutritionScore}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ComparisonDialog
+        open={showComparisonDialog}
+        onOpenChange={setShowComparisonDialog}
+        productName={product.name}
+        historyProducts={historyProducts}
+        onScanNew={() => {
+          setShowComparisonDialog(false);
+          onNavigate('camera');
+        }}
+        onSelectProduct={(historyProduct) => {
+          setShowComparisonDialog(false);
+          onNavigate('comparison', { products: [product, historyProduct] });
+        }}
+      />
     </>
   );
 }

@@ -88,54 +88,44 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
     }
 
     console.log('✅ Product found:', product.name);
-    console.log('📊 Nutrition data:', product.nutrition);
 
-    try {
-      const userProfile = StorageService.getUserProfile();
-
-      if (!userProfile) {
-        throw new Error('User profile not found');
-      }
-
-      console.log('🤖 Analyzing with AI in language:', language);
-      const analysis = await analyzeProductWithAI(
-        {
-          name: product.name,
-          brand: product.brand,
-          category: product.category,
-          ingredients: product.ingredients,
-          allergens: product.allergens,
-          nutrition: product.nutrition
-        },
-        userProfile,
-        language
-      );
-
-      console.log('✅ Analysis complete:', analysis);
-
-      const analyzedProduct = {
-        ...product,
-        status: analysis.status,
-        nutritionScore: analysis.nutritionScore,
-        benefits: analysis.benefits,
-        issues: analysis.issues,
-        aiDescription: analysis.aiDescription
-      };
-
-      onNavigate('scan-result', { product: analyzedProduct });
-    } catch (err) {
-      console.error('Error analyzing product:', err);
-      setError('Error al analizar el producto');
-      setIsAnalyzing(false);
-
-      scanTimeoutRef.current = setTimeout(() => {
-        setError(null);
-        setLastScannedBarcode(null);
-        if (scanMode === 'barcode') {
-          startBarcodeScanning();
-        }
-      }, 3000);
+    // Haptic feedback
+    if (navigator.vibrate) {
+      navigator.vibrate(200);
     }
+
+    // Get user profile and analyze with AI in the current language
+    const userProfile = StorageService.getUserProfile();
+    if (userProfile) {
+      try {
+        console.log(`🤖 Analyzing product in ${language}...`);
+        const aiResult = await analyzeProductWithAI(product, userProfile, language);
+
+        // Merge AI results with product
+        const enrichedProduct = {
+          ...product,
+          status: aiResult.status,
+          nutritionScore: aiResult.nutritionScore,
+          benefits: aiResult.benefits,
+          issues: aiResult.issues,
+          aiDescription: aiResult.aiDescription,
+          ingredients: aiResult.ingredients || product.ingredients,
+          allergens: aiResult.allergens || product.allergens
+        };
+
+        // Navigate with enriched product
+        onNavigate('scan-result', { product: enrichedProduct });
+      } catch (error) {
+        console.error('AI analysis failed, using basic product:', error);
+        // Navigate with basic product if AI fails
+        onNavigate('scan-result', { product });
+      }
+    } else {
+      // No user profile, navigate with basic product
+      onNavigate('scan-result', { product });
+    }
+
+    setIsAnalyzing(false);
   };
 
   const handleScanError = (err: Error) => {
@@ -235,8 +225,8 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
           <button
             onClick={() => setIsFlashOn(!isFlashOn)}
             className={`w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center transition-all active:scale-95 ${isFlashOn
-                ? 'bg-[#F97316] shadow-lg shadow-[#F97316]/30 border border-[#F97316]'
-                : 'bg-black/50 hover:bg-black/70 border border-white/10'
+              ? 'bg-[#F97316] shadow-lg shadow-[#F97316]/30 border border-[#F97316]'
+              : 'bg-black/50 hover:bg-black/70 border border-white/10'
               }`}
           >
             <Flashlight className="w-6 h-6 text-white" />
@@ -250,8 +240,8 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
             <button
               onClick={() => setScanMode('barcode')}
               className={`flex-1 py-3.5 rounded-xl transition-all flex flex-col items-center gap-1 ${scanMode === 'barcode'
-                  ? 'bg-[#22C55E] text-white shadow-lg shadow-[#22C55E]/30'
-                  : 'text-white/60 hover:text-white/80'
+                ? 'bg-[#22C55E] text-white shadow-lg shadow-[#22C55E]/30'
+                : 'text-white/60 hover:text-white/80'
                 }`}
             >
               <ScanBarcode className={`w-6 h-6 ${scanMode === 'barcode' ? 'stroke-[2.5]' : ''}`} />
@@ -260,8 +250,8 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
             <button
               onClick={() => setScanMode('camera')}
               className={`flex-1 py-3.5 rounded-xl transition-all flex flex-col items-center gap-1 ${scanMode === 'camera'
-                  ? 'bg-[#22C55E] text-white shadow-lg shadow-[#22C55E]/30'
-                  : 'text-white/60 hover:text-white/80'
+                ? 'bg-[#22C55E] text-white shadow-lg shadow-[#22C55E]/30'
+                : 'text-white/60 hover:text-white/80'
                 }`}
             >
               <Camera className={`w-6 h-6 ${scanMode === 'camera' ? 'stroke-[2.5]' : ''}`} />
@@ -277,14 +267,14 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
                 : 'Listo para escanear'}
           </p>
         </div>
-      </div>
 
-      <style>{`
+        <style>{`
         @keyframes scan {
           0%, 100% { top: 10%; }
           50% { top: 90%; }
         }
       `}</style>
+      </div>
     </div>
   );
 }

@@ -13,28 +13,57 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
   const { t } = useLanguage();
   const userProfile = StorageService.getUserProfile() || demoUserProfile;
 
+
   const history = StorageService.getScanHistory();
-  const scanCount = history.length;
+  // Only count purchased items for real statistics
+  const purchasedItems = history.filter(item => item.isPurchased);
+  const scanCount = purchasedItems.length;
   const favoritesCount = history.filter(item => item.isFavorite).length;
   const averageScore = scanCount > 0
-    ? Math.round(history.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
+    ? Math.round(purchasedItems.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
     : 0;
 
-  // Score evolution data (last 7 days)
-  const scoreData = [
-    { day: 'Mon', score: 78 },
-    { day: 'Tue', score: 82 },
-    { day: 'Wed', score: 80 },
-    { day: 'Thu', score: 85 },
-    { day: 'Fri', score: 83 },
-    { day: 'Sat', score: 87 },
-    { day: 'Sun', score: 85 }
-  ];
+  // Generate real score evolution data from last 7 days of purchased items
+  const generateScoreData = () => {
+    const today = new Date();
+    const last7Days: Date[] = [];
+
+    // Create array of last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      last7Days.push(date);
+    }
+
+    // Map to day labels and calculate average scores
+    return last7Days.map((date) => {
+      const dayName = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()] as keyof typeof t.common.days;
+
+      // Get scans from this day
+      const dayScans = purchasedItems.filter(item => {
+        const scanDate = new Date(item.scannedAt);
+        return scanDate.toDateString() === date.toDateString();
+      });
+
+      // Calculate average score for this day
+      let score = 0;
+      if (dayScans.length > 0) {
+        score = Math.round(dayScans.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / dayScans.length);
+      }
+
+      return {
+        day: t.common.days[dayName],
+        score: score || (scanCount > 0 ? averageScore : 0) // Use average if no specific data
+      };
+    });
+  };
+
+  const scoreData = generateScoreData();
 
   const menuItems = [
     {
       id: 'history',
-      label: t.home.recentScans, // Using recent scans as proxy for history label or add specific if needed
+      label: t.history.title,
       description: t.stats.scannedProducts,
       icon: History,
       color: 'text-[#3B82F6]',
@@ -42,7 +71,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
     },
     {
       id: 'favorites',
-      label: t.stats.healthyChoices, // Using healthy choices as proxy or add specific
+      label: t.favorites.title,
       description: t.home.viewAll,
       icon: Heart,
       color: 'text-[#EF4444]',
@@ -50,7 +79,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
     },
     {
       id: 'settings',
-      label: t.profile.appSettings,
+      label: t.settings.app.title,
       description: t.profile.dietaryNeeds,
       icon: Shield,
       color: 'text-[#22C55E]',
@@ -185,7 +214,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              {t.common.search} {/* Placeholder for "Tap to view..." */}
+              {t.stats.detailedStats}
             </p>
           </button>
         </div>

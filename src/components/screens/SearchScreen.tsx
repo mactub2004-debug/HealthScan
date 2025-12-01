@@ -1,28 +1,36 @@
 import { useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { ProductCard } from '../ProductCard';
 import { demoProducts } from '../../lib/demo-data';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { analyzeProductWithAI } from '../../services/ai-analysis.service';
+import { StorageService } from '../../lib/storage';
 
 interface SearchScreenProps {
   onNavigate: (screen: string, data?: any) => void;
 }
 
 export function SearchScreen({ onNavigate }: SearchScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
-  const categories = ['All', ...Array.from(new Set(demoProducts.map(p => p.category)))];
-  const statuses = [
-    { value: 'suitable', label: t.search.statusLabels.safe, color: 'bg-[#22C55E]' },
-    { value: 'questionable', label: t.search.statusLabels.caution, color: 'bg-[#F97316]' },
-    { value: 'not-recommended', label: t.search.statusLabels.avoid, color: 'bg-[#EF4444]' }
-  ];
+  // Map English categories to translated ones
+  const categoryMap: Record<string, string> = {
+    'Snacks': t.home.categories.snacks,
+    'Beverages': t.home.categories.beverages,
+    'Dairy': t.home.categories.dairy,
+    'Breakfast': t.home.categories.breakfast,
+    'Frozen': t.home.categories.frozen
+  };
+
+  const uniqueCategories = Array.from(new Set(demoProducts.map(p => p.category)));
+  const translatedCategories = uniqueCategories.map(cat => categoryMap[cat] || cat);
+  const categories = [t.home.viewAll, ...translatedCategories];
 
   const filteredProducts = demoProducts.filter(product => {
     const matchesSearch = searchQuery === '' ||
@@ -30,30 +38,65 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
       product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = !selectedCategory ||
-      selectedCategory === 'All' ||
-      product.category === selectedCategory;
+    // Reverse map: translate selected category back to English for filtering
+    const reverseCategoryMap: Record<string, string> = {
+      [t.home.categories.snacks]: 'Snacks',
+      [t.home.categories.beverages]: 'Beverages',
+      [t.home.categories.dairy]: 'Dairy',
+      [t.home.categories.breakfast]: 'Breakfast',
+      [t.home.categories.frozen]: 'Frozen'
+    };
 
-    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(product.status);
+    const englishCategory = selectedCategory ? (reverseCategoryMap[selectedCategory] || selectedCategory) : null;
+    const matchesCategory = !englishCategory ||
+      selectedCategory === t.home.viewAll ||
+      product.category === englishCategory;
 
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesCategory;
   });
-
-  const toggleStatus = (statusValue: string) => {
-    setSelectedStatuses(prev =>
-      prev.includes(statusValue)
-        ? prev.filter(s => s !== statusValue)
-        : [...prev, statusValue]
-    );
-  };
 
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedCategory(null);
-    setSelectedStatuses([]);
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory || selectedStatuses.length > 0;
+  const handleProductClick = async (product: any) => {
+    setIsAnalyzing(product.id);
+
+    try {
+      // Get user profile
+      const userProfile = StorageService.getUserProfile();
+
+      if (userProfile) {
+        // Analyze with AI
+        const aiResult = await analyzeProductWithAI(product, userProfile, language);
+
+        // Merge AI results
+        const enrichedProduct = {
+          ...product,
+          status: aiResult.status,
+          nutritionScore: aiResult.nutritionScore,
+          benefits: aiResult.benefits,
+          issues: aiResult.issues,
+          aiDescription: aiResult.aiDescription,
+          ingredients: aiResult.ingredients || product.ingredients,
+          allergens: aiResult.allergens || product.allergens
+        };
+
+        onNavigate('scan-result', { product: enrichedProduct });
+      } else {
+        // Fallback if no profile
+        onNavigate('scan-result', { product });
+      }
+    } catch (error) {
+      console.error('Error analyzing product:', error);
+      onNavigate('scan-result', { product });
+    } finally {
+      setIsAnalyzing(null);
+    }
+  };
+
+  const hasActiveFilters = searchQuery || selectedCategory;
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-20">
@@ -80,77 +123,48 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 hover:bg-gray-100 rounded-full p-1 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gray-900"
             >
-              <X className="w-4 h-4 text-muted-foreground" />
+              <X className="w-4 h-4" />
             </button>
           )}
         </div>
-      </div>
 
-      {/* Filters */}
-      <div className="max-w-md mx-auto px-6 pb-6 space-y-5">
-        {/* Categories */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <p>{t.search.categories}</p>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={selectedCategory === category || (category === 'All' && !selectedCategory) ? 'default' : 'outline'}
-                className={`cursor-pointer whitespace-nowrap px-4 py-2 rounded-xl transition-all ${selectedCategory === category || (category === 'All' && !selectedCategory)
-                    ? 'bg-[#22C55E] text-white hover:bg-[#22C55E]/90'
-                    : 'hover:border-[#22C55E]/50'
-                  }`}
-                onClick={() => setSelectedCategory(category === 'All' ? null : category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Status */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <p>{t.search.filterByStatus}</p>
-            {selectedStatuses.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {selectedStatuses.length} {t.search.selected}
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {statuses.map((status) => {
-              const isSelected = selectedStatuses.includes(status.value);
-              return (
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {/* Category Filter */}
+          <div className="w-full overflow-x-auto pb-2 -mx-6 px-6 scrollbar-hide">
+            <div className="flex gap-2">
+              {categories.map((category) => (
                 <button
-                  key={status.value}
-                  onClick={() => toggleStatus(status.value)}
-                  className={`py-2.5 rounded-xl transition-all text-center border-2 ${isSelected
-                      ? `${status.color} text-white border-transparent`
-                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  key={category}
+                  onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
+                      ? 'bg-[#28C567] text-white'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                 >
-                  <span className="text-xs">{status.label}</span>
+                  {category}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Clear filters */}
         {hasActiveFilters && (
-          <Button
-            variant="outline"
-            onClick={clearFilters}
-            className="w-full h-12 rounded-2xl border-gray-200 hover:bg-white"
-          >
-            <X className="w-4 h-4 mr-2" />
-            {t.search.clearFilters}
-          </Button>
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {selectedCategory && (
+                <span>{selectedCategory} • </span>
+              )}
+            </p>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-[#28C567] font-medium hover:underline"
+            >
+              {t.search.clearFilters}
+            </button>
+          </div>
         )}
       </div>
 
@@ -175,13 +189,21 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
               {filteredProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className="animate-in fade-in slide-in-from-bottom-4"
+                  className="animate-in fade-in slide-in-from-bottom-4 relative"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <ProductCard
                     product={product}
-                    onClick={() => onNavigate('scan-result', { product })}
+                    onClick={() => handleProductClick(product)}
                   />
+                  {isAnalyzing === product.id && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 text-[#28C567] animate-spin" />
+                        <span className="text-sm font-medium text-[#28C567]">{t.common.loading}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

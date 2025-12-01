@@ -1,4 +1,4 @@
-export type Language = 'ES' | 'EN' | 'PT';
+export type Language = 'ES' | 'EN';
 
 export const translations = {
     ES: {
@@ -12,23 +12,46 @@ export const translations = {
             back: 'Atrás',
             search: 'Buscar',
             filter: 'Filtrar',
-            scan: 'escaneo',
+            scan: 'Escanear',
             scans: 'escaneos',
             week: 'Semana',
             month: 'Mes',
             year: 'Año',
-            thisWeek: 'Esta semana'
+            thisWeek: 'Esta semana',
+            imageError: 'Error cargando imagen',
+            nav: {
+                home: 'Inicio',
+                search: 'Buscar',
+                scan: 'Escanear',
+                list: 'Lista',
+                profile: 'Perfil'
+            },
+            days: {
+                mon: 'Lun',
+                tue: 'Mar',
+                jun: 'Jun',
+                jul: 'Jul',
+                aug: 'Ago',
+                sep: 'Sep',
+                oct: 'Oct',
+                nov: 'Nov',
+                dec: 'Dic'
+            },
+            weekLabel: 'Semana',
+            time: {
+                justNow: 'Ahora mismo'
+            }
         },
         welcome: {
-            title: 'Conoce lo que comes',
+            title: 'Sabe lo que comes',
             subtitle: 'Análisis personalizado de alimentos.',
             getStarted: 'Comenzar',
             alreadyHaveAccount: '¿Ya usas HealthScan? ',
-            signIn: 'Iniciar Sesión',
+            signIn: 'Entrar',
             analyzing: 'Analizando...'
         },
         onboarding: {
-            skip: 'Omitir',
+            skip: 'Saltar',
             next: 'Siguiente',
             getStarted: 'Comenzar',
             slides: [
@@ -60,12 +83,12 @@ export const translations = {
                 languagePlaceholder: 'Selecciona tu idioma'
             },
             step2: {
-                title: 'Personalicemos tu filtro de nutrición para que coincida con tus necesidades específicas'
+                title: 'Vamos a personalizar tu filtro de nutrición para satisfacer tus necesidades específicas'
             },
             step3: {
                 title: 'Selecciona tus alergias',
                 subtitle: 'Verificaremos los productos contra estos alérgenos',
-                skip: 'Puedes omitir esto si no tienes alergias'
+                skip: 'Puedes saltar esto si no tienes alergias'
             },
             step4: {
                 title: 'Preferencias dietéticas',
@@ -74,7 +97,7 @@ export const translations = {
             },
             step5: {
                 title: 'Objetivos de salud',
-                subtitle: '¿En qué estás trabajando? (Selecciona uno)',
+                subtitle: '¿En qué estás trabajando? (Selecciona hasta dos)',
                 optional: 'Opcional - ayuda a personalizar tu experiencia'
             },
             step6: {
@@ -82,14 +105,14 @@ export const translations = {
                 subtitle: 'Revisa los detalles de tu perfil',
                 labels: {
                     name: 'Nombre',
-                    email: 'Correo electrónico',
+                    email: 'Correo',
                     country: 'País',
                     language: 'Idioma',
                     allergies: 'Alergias',
                     preferences: 'Preferencias',
                     goals: 'Objetivos'
                 },
-                complete: 'Completar configuración'
+                complete: 'Finalizar configuración'
             },
             continue: 'Continuar',
             header: {
@@ -99,16 +122,16 @@ export const translations = {
         },
         lists: {
             allergens: [
-                'Gluten', 'Leche', 'Huevos', 'Pescado', 'Mariscos',
-                'Frutos secos', 'Cacahuetes', 'Trigo', 'Soja', 'Sésamo'
+                'Gluten', 'Leche', 'Huevos', 'Pescado', 'Crustáceos',
+                'Nueces', 'Maní', 'Trigo', 'Soja', 'Sésamo'
             ],
             dietaryPreferences: [
                 'Vegano', 'Vegetariano', 'Sin gluten', 'Sin lácteos', 'Orgánico',
-                'Bajo en azúcar', 'Bajo en sodio', 'Alto en proteínas', 'Keto', 'Paleo'
+                'Bajo en azúcar', 'Bajo en sodio', 'Alto en proteína', 'Keto', 'Paleo'
             ],
             healthGoals: [
                 'Perder peso', 'Ganar músculo', 'Mantener peso', 'Mejorar energía',
-                'Mejor digestión', 'Salud cardíaca', 'Controlar diabetes', 'Reducir colesterol'
+                'Mejor digestión', 'Salud del corazón', 'Controlar diabetes', 'Reducir colesterol'
             ]
         },
         home: {
@@ -123,18 +146,29 @@ export const translations = {
             carbs: 'Carbohidratos',
             fat: 'Grasas',
             quickActions: 'Acciones rápidas',
-            smartPicks: 'Selección inteligente',
+            smartPicks: 'Selecciones inteligentes',
             forYou: 'Para ti',
             community: 'Comunidad',
             topRated: 'Mejor valorados',
             recommended: 'Recomendado para ti',
             dailyTip: 'Consejo diario',
-            tipContent: '¿Lees las etiquetas nutricionales? Fíjate primero en el tamaño de la porción para calcular con precisión tu ingesta.',
+            tipContent: '¿Leyendo etiquetas nutricionales? Concéntrate primero en el tamaño de la porción para calcular con precisión tu ingesta.',
+            emptyState: {
+                title: '¡Haz tu primer escaneo!',
+                description: 'Comienza a construir tu historial nutricional escaneando productos y marcando los que has comprado.'
+            },
             status: {
                 suitable: 'Adecuado',
                 questionable: 'Cuestionable',
                 notRecommended: 'No recomendado',
                 unknown: 'Desconocido'
+            },
+            categories: {
+                snacks: 'Snacks',
+                beverages: 'Bebidas',
+                dairy: 'Lácteos',
+                breakfast: 'Desayuno',
+                frozen: 'Congelados'
             }
         },
         stats: {
@@ -144,13 +178,13 @@ export const translations = {
             scoreEvolution: 'Evolución de puntuación',
             topBrands: 'Ranking de marcas',
             currentScore: 'Puntuación actual',
-            totalScans: 'Total escaneos',
+            totalScans: 'Total de escaneos',
             favorites: 'Favoritos',
             weeklyOverview: 'Resumen semanal',
             nutritionScore: 'Puntuación nutricional',
             scannedProducts: 'Productos escaneados',
             healthyChoices: 'Elecciones saludables',
-            trend: 'Tendencia de puntuación'
+            trend: 'tendencia de puntuación'
         },
         profile: {
             title: 'Perfil',
@@ -168,12 +202,12 @@ export const translations = {
             filterByStatus: 'Filtrar por estado',
             selected: 'seleccionado(s)',
             clearFilters: 'Limpiar filtros',
-            noResults: 'No se encontraron productos',
+            noResults: 'Ningún producto encontrado',
             tryAdjusting: 'Intenta ajustar tu búsqueda o filtros',
             found: 'producto(s) encontrado(s)',
             statusLabels: {
                 safe: 'Seguro',
-                caution: 'Precaución',
+                caution: 'Cuidado',
                 avoid: 'Evitar'
             }
         },
@@ -191,9 +225,9 @@ export const translations = {
             viewComparison: 'Toca para ver detalles',
             time: {
                 justNow: 'Ahora mismo',
-                ago: 'h hace',
+                ago: 'h atrás',
                 yesterday: 'Ayer',
-                daysAgo: 'días hace'
+                daysAgo: 'días atrás'
             }
         },
         favorites: {
@@ -213,7 +247,7 @@ export const translations = {
                 },
                 questionable: {
                     label: 'Revisión necesaria',
-                    description: 'Este producto tiene algunas preocupaciones. Revisa los detalles abajo.'
+                    description: 'Este producto tiene algunas preocupaciones. Verifica los detalles abajo.'
                 },
                 notRecommended: {
                     label: 'No recomendado',
@@ -234,8 +268,10 @@ export const translations = {
             },
             actions: {
                 scanAnother: 'Escanear otro',
-                compare: 'Comparar con otros productos',
-                viewSimilar: 'Ver productos similares'
+                compare: 'Comparar',
+                viewSimilar: 'Ver similares',
+                markAsPurchased: 'Marcar comprado',
+                purchased: 'Comprado ✓'
             },
             compare: {
                 title: 'Comparar productos',
@@ -243,6 +279,18 @@ export const translations = {
                 scanNew: 'Escanear nuevo producto',
                 scanNewDesc: 'Usa la cámara para escanear otro producto',
                 orHistory: 'o elige del historial'
+            },
+            nutrition: {
+                title: 'Información Nutricional',
+                perPortion: 'Por Porción',
+                per100g: 'Por 100g',
+                calories: 'Calorías',
+                protein: 'Proteína',
+                carbs: 'Carbohidratos',
+                fat: 'Grasas',
+                fiber: 'Fibra',
+                sugar: 'Azúcar',
+                sodium: 'Sodio'
             }
         },
         settings: {
@@ -252,11 +300,11 @@ export const translations = {
                 name: 'Nombre completo',
                 email: 'Correo electrónico',
                 country: 'País',
-                selectCountry: 'Selecciona país',
+                selectCountry: 'Selecciona el país',
                 language: 'Idioma',
-                selectLanguage: 'Selecciona idioma',
+                selectLanguage: 'Selecciona el idioma',
                 save: 'Guardar cambios',
-                savedSuccess: '¡Perfil guardado exitosamente!'
+                savedSuccess: '¡Perfil guardado con éxito!'
             },
             dietary: {
                 title: 'Preferencias dietéticas',
@@ -269,7 +317,7 @@ export const translations = {
                 darkMode: 'Modo oscuro'
             },
             support: {
-                help: 'Ayuda y Preguntas frecuentes',
+                help: 'Ayuda y FAQ',
                 helpDesc: 'Obtén ayuda y soporte'
             }
         }
@@ -285,18 +333,41 @@ export const translations = {
             back: 'Back',
             search: 'Search',
             filter: 'Filter',
-            scan: 'scan',
+            scan: 'Scan',
             scans: 'scans',
             week: 'Week',
             month: 'Month',
             year: 'Year',
-            thisWeek: 'This Week'
+            thisWeek: 'This week',
+            imageError: 'Error loading image',
+            nav: {
+                home: 'Home',
+                search: 'Search',
+                scan: 'Scan',
+                list: 'List',
+                profile: 'Profile'
+            },
+            days: {
+                mon: 'Mon',
+                tue: 'Tue',
+                jun: 'Jun',
+                jul: 'Jul',
+                aug: 'Aug',
+                sep: 'Sep',
+                oct: 'Oct',
+                nov: 'Nov',
+                dec: 'Dec'
+            },
+            weekLabel: 'Week',
+            time: {
+                justNow: 'Just now'
+            }
         },
         welcome: {
             title: 'Know what you eat',
             subtitle: 'Personalized food analysis.',
             getStarted: 'Get Started',
-            alreadyHaveAccount: 'Already using HealthScan? ',
+            alreadyHaveAccount: 'Already use HealthScan? ',
             signIn: 'Sign In',
             analyzing: 'Analyzing...'
         },
@@ -306,24 +377,24 @@ export const translations = {
             getStarted: 'Get Started',
             slides: [
                 {
-                    title: 'Scan Any Product',
-                    description: 'Simply scan the barcode or take a photo of any food product to get instant nutritional insights and safety alerts.'
+                    title: 'Scan any product',
+                    description: 'Simply scan the barcode or take a photo of any food product to get instant nutritional information and safety alerts.'
                 },
                 {
-                    title: 'Stay Safe',
+                    title: 'Stay safe',
                     description: 'We check ingredients against your allergies and dietary preferences to keep you protected and healthy.'
                 },
                 {
-                    title: 'Smart Recommendations',
+                    title: 'Smart recommendations',
                     description: 'Get personalized product suggestions based on your health goals and dietary preferences.'
                 }
             ]
         },
         registration: {
             step1: {
-                title: 'About You',
-                subtitle: "Let's get to know you better",
-                nameLabel: 'Full Name',
+                title: 'About you',
+                subtitle: 'Let\'s get to know you better',
+                nameLabel: 'Full name',
                 namePlaceholder: 'Enter your name',
                 emailLabel: 'Email',
                 emailPlaceholder: 'your@email.com',
@@ -333,25 +404,25 @@ export const translations = {
                 languagePlaceholder: 'Select your language'
             },
             step2: {
-                title: "Let's customize your nutrition filter to match your specific needs"
+                title: 'Let\'s customize your nutrition filter to meet your specific needs'
             },
             step3: {
-                title: 'Select Your Allergies',
-                subtitle: "We'll check products against these allergens",
-                skip: 'You can skip this if you have no allergies'
+                title: 'Select your allergies',
+                subtitle: 'We will check products against these allergens',
+                skip: 'You can skip this if you don\'t have allergies'
             },
             step4: {
-                title: 'Dietary Preferences',
+                title: 'Dietary preferences',
                 subtitle: 'Choose what matters to you',
                 optional: 'Optional - helps us recommend better products'
             },
             step5: {
-                title: 'Health Goals',
-                subtitle: 'What are you working towards? (Select one)',
-                optional: 'Optional - helps personalize your experience'
+                title: 'Health goals',
+                subtitle: 'What are you working on? (Select up to two)',
+                optional: 'Optional - helps customize your experience'
             },
             step6: {
-                title: "You're All Set! 🎉",
+                title: 'All set! 🎉',
                 subtitle: 'Review your profile details',
                 labels: {
                     name: 'Name',
@@ -362,85 +433,96 @@ export const translations = {
                     preferences: 'Preferences',
                     goals: 'Goals'
                 },
-                complete: 'Complete Setup'
+                complete: 'Complete setup'
             },
             continue: 'Continue',
             header: {
-                title: 'Create Your Profile',
+                title: 'Create your profile',
                 step: 'Step'
             }
         },
         lists: {
             allergens: [
-                'Gluten', 'Milk', 'Eggs', 'Fish', 'Shellfish',
-                'Tree Nuts', 'Peanuts', 'Wheat', 'Soy', 'Sesame'
+                'Gluten', 'Milk', 'Eggs', 'Fish', 'Crustaceans',
+                'Nuts', 'Peanuts', 'Wheat', 'Soy', 'Sesame'
             ],
             dietaryPreferences: [
-                'Vegan', 'Vegetarian', 'Gluten-free', 'Dairy-free', 'Organic',
-                'Low sugar', 'Low sodium', 'High protein', 'Keto-friendly', 'Paleo'
+                'Vegan', 'Vegetarian', 'Gluten Free', 'Dairy Free', 'Organic',
+                'Low Sugar', 'Low Sodium', 'High Protein', 'Keto', 'Paleo'
             ],
             healthGoals: [
-                'Lose weight', 'Gain muscle', 'Maintain weight', 'Improve energy',
-                'Better digestion', 'Heart health', 'Manage diabetes', 'Reduce cholesterol'
+                'Lose Weight', 'Build Muscle', 'Maintain Weight', 'Improve Energy',
+                'Better Digestion', 'Heart Health', 'Manage Diabetes', 'Reduce Cholesterol'
             ]
         },
         home: {
             greeting: 'Hello',
             readyMessage: 'Ready to make healthy choices?',
-            scanProduct: 'Scan Product',
-            recentScans: 'Recent Scans',
-            viewAll: 'View All',
-            dailySummary: 'Daily Summary',
+            scanProduct: 'Scan product',
+            recentScans: 'Recent scans',
+            viewAll: 'View all',
+            dailySummary: 'Daily summary',
             calories: 'Calories',
             protein: 'Protein',
             carbs: 'Carbs',
             fat: 'Fat',
-            quickActions: 'Quick Actions',
-            smartPicks: 'Smart Picks',
+            quickActions: 'Quick actions',
+            smartPicks: 'Smart picks',
             forYou: 'For you',
             community: 'Community',
             topRated: 'Top rated',
-            recommended: 'Recommended for You',
-            dailyTip: 'Daily Tip',
-            tipContent: 'Reading nutrition labels? Focus on serving sizes first to accurately calculate your intake.',
+            recommended: 'Recommended for you',
+            dailyTip: 'Daily tip',
+            tipContent: 'Reading nutrition labels? Focus on serving size first to accurately calculate your intake.',
+            emptyState: {
+                title: 'Make your first scan!',
+                description: 'Start building your nutritional history by scanning products and marking the ones you bought.'
+            },
             status: {
                 suitable: 'Suitable',
                 questionable: 'Questionable',
                 notRecommended: 'Not Recommended',
                 unknown: 'Unknown'
+            },
+            categories: {
+                snacks: 'Snacks',
+                beverages: 'Beverages',
+                dairy: 'Dairy',
+                breakfast: 'Breakfast',
+                frozen: 'Frozen'
             }
         },
         stats: {
             title: 'Statistics',
-            detailedStats: 'Detailed Statistics',
-            insights: 'Your health journey insights',
-            scoreEvolution: 'Health Score Evolution',
-            topBrands: 'Top Brands Ranking',
-            currentScore: 'Current Score',
-            totalScans: 'Total Scans',
+            detailedStats: 'Detailed statistics',
+            insights: 'Health insights',
+            scoreEvolution: 'Score evolution',
+            topBrands: 'Brand ranking',
+            currentScore: 'Current score',
+            totalScans: 'Total scans',
             favorites: 'Favorites',
-            weeklyOverview: 'Weekly Overview',
-            nutritionScore: 'Nutrition Score',
-            scannedProducts: 'Scanned Products',
-            healthyChoices: 'Healthy Choices',
-            trend: 'health score trend'
+            weeklyOverview: 'Weekly overview',
+            nutritionScore: 'Nutrition score',
+            scannedProducts: 'Scanned products',
+            healthyChoices: 'Healthy choices',
+            trend: 'score trend'
         },
         profile: {
             title: 'Profile',
-            personalInfo: 'Personal Information',
-            dietaryNeeds: 'Dietary Needs',
-            appSettings: 'App Settings',
-            editProfile: 'Edit Profile',
-            signOut: 'Sign Out'
+            personalInfo: 'Personal information',
+            dietaryNeeds: 'Dietary needs',
+            appSettings: 'App settings',
+            editProfile: 'Edit profile',
+            signOut: 'Sign out'
         },
         search: {
-            title: 'Search Products',
+            title: 'Search products',
             subtitle: 'Find and compare products',
-            placeholder: 'Search by name, brand, or category...',
+            placeholder: 'Search by name, brand or category...',
             categories: 'Categories',
-            filterByStatus: 'Filter by Status',
+            filterByStatus: 'Filter by status',
             selected: 'selected',
-            clearFilters: 'Clear Filters',
+            clearFilters: 'Clear filters',
             noResults: 'No products found',
             tryAdjusting: 'Try adjusting your search or filters',
             found: 'product(s) found',
@@ -454,14 +536,14 @@ export const translations = {
             title: 'History',
             scannedCount: 'products scanned',
             tabs: {
-                products: 'Product History',
+                products: 'Product history',
                 comparisons: 'Comparisons'
             },
-            noHistory: 'No scan history yet',
-            startScanning: 'Start scanning products to build your history',
+            noHistory: 'No history yet',
+            startScanning: 'Start scanning to build your history',
             noComparisons: 'No comparisons yet',
             compareHint: 'Compare products to make better choices',
-            viewComparison: 'Tap to view comparison details',
+            viewComparison: 'Tap to view details',
             time: {
                 justNow: 'Just now',
                 ago: 'h ago',
@@ -475,21 +557,21 @@ export const translations = {
             deleteHint: 'Drag here to delete',
             releaseHint: 'Release to delete',
             noFavorites: 'No favorites yet',
-            hint: 'Products you mark as favorites will appear here for quick access',
+            hint: 'Products you mark as favorite will appear here',
             dragHint: 'Drag items up to delete them'
         },
         scanResult: {
             status: {
                 suitable: {
-                    label: 'Suitable for You',
+                    label: 'Suitable for you',
                     description: 'This product matches your dietary profile and health goals.'
                 },
                 questionable: {
-                    label: 'Review Needed',
-                    description: 'This product has some concerns. Check the details below.'
+                    label: 'Review needed',
+                    description: 'This product has some concerns. Check details below.'
                 },
                 notRecommended: {
-                    label: 'Not Recommended',
+                    label: 'Not recommended',
                     description: 'This product conflicts with your dietary profile.'
                 }
             },
@@ -503,19 +585,33 @@ export const translations = {
             allergens: 'Allergen Information',
             alternatives: {
                 title: 'Better Alternatives',
-                seeAll: 'See all'
+                seeAll: 'See All'
             },
             actions: {
-                scanAnother: 'Scan Another',
-                compare: 'Compare with Other Products',
-                viewSimilar: 'View Similar Products'
+                scanAnother: 'Scan another',
+                compare: 'Compare',
+                viewSimilar: 'View similar',
+                markAsPurchased: 'Mark purchased',
+                purchased: 'Purchased ✓'
             },
             compare: {
                 title: 'Compare Products',
                 subtitle: 'Choose a product from your history to compare with',
-                scanNew: 'Scan New Product',
+                scanNew: 'Scan new product',
                 scanNewDesc: 'Use camera to scan another product',
                 orHistory: 'or choose from history'
+            },
+            nutrition: {
+                title: 'Nutrition Facts',
+                perPortion: 'Per Portion',
+                per100g: 'Per 100g',
+                calories: 'Calories',
+                protein: 'Protein',
+                carbs: 'Carbs',
+                fat: 'Fat',
+                fiber: 'Fiber',
+                sugar: 'Sugar',
+                sodium: 'Sodium'
             }
         },
         settings: {
@@ -525,9 +621,9 @@ export const translations = {
                 name: 'Full Name',
                 email: 'Email',
                 country: 'Country',
-                selectCountry: 'Select country',
+                selectCountry: 'Select Country',
                 language: 'Language',
-                selectLanguage: 'Select language',
+                selectLanguage: 'Select Language',
                 save: 'Save Changes',
                 savedSuccess: 'Profile saved successfully!'
             },
@@ -544,279 +640,6 @@ export const translations = {
             support: {
                 help: 'Help & FAQ',
                 helpDesc: 'Get help and support'
-            }
-        }
-    },
-    PT: {
-        common: {
-            loading: 'Carregando...',
-            error: 'Algo deu errado',
-            save: 'Salvar',
-            cancel: 'Cancelar',
-            edit: 'Editar',
-            delete: 'Excluir',
-            back: 'Voltar',
-            search: 'Buscar',
-            filter: 'Filtrar',
-            scan: 'escaneamento',
-            scans: 'escaneamentos',
-            week: 'Semana',
-            month: 'Mês',
-            year: 'Ano',
-            thisWeek: 'Esta semana'
-        },
-        welcome: {
-            title: 'Saiba o que você come',
-            subtitle: 'Análise personalizada de alimentos.',
-            getStarted: 'Começar',
-            alreadyHaveAccount: 'Já usa o HealthScan? ',
-            signIn: 'Entrar',
-            analyzing: 'Analisando...'
-        },
-        onboarding: {
-            skip: 'Pular',
-            next: 'Próximo',
-            getStarted: 'Começar',
-            slides: [
-                {
-                    title: 'Escaneie qualquer produto',
-                    description: 'Basta escanear o código de barras ou tirar uma foto de qualquer produto alimentício para obter informações nutricionais instantâneas e alertas de segurança.'
-                },
-                {
-                    title: 'Fique seguro',
-                    description: 'Verificamos os ingredientes contra suas alergias e preferências dietéticas para mantê-lo protegido e saudável.'
-                },
-                {
-                    title: 'Recomendações inteligentes',
-                    description: 'Obtenha sugestões de produtos personalizadas com base em seus objetivos de saúde e preferências dietéticas.'
-                }
-            ]
-        },
-        registration: {
-            step1: {
-                title: 'Sobre você',
-                subtitle: 'Vamos te conhecer melhor',
-                nameLabel: 'Nome completo',
-                namePlaceholder: 'Digite seu nome',
-                emailLabel: 'E-mail',
-                emailPlaceholder: 'seu@email.com',
-                countryLabel: 'País *',
-                countryPlaceholder: 'Selecione seu país',
-                languageLabel: 'Idioma *',
-                languagePlaceholder: 'Selecione seu idioma'
-            },
-            step2: {
-                title: 'Vamos personalizar seu filtro de nutrição para atender às suas necessidades específicas'
-            },
-            step3: {
-                title: 'Selecione suas alergias',
-                subtitle: 'Verificaremos os produtos contra esses alérgenos',
-                skip: 'Você pode pular isso se não tiver alergias'
-            },
-            step4: {
-                title: 'Preferencias dietéticas',
-                subtitle: 'Escolha o que importa para você',
-                optional: 'Opcional - nos ajuda a recomendar produtos melhores'
-            },
-            step5: {
-                title: 'Objetivos de saúde',
-                subtitle: 'No que você está trabalhando? (Selecione um)',
-                optional: 'Opcional - ajuda a personalizar sua experiência'
-            },
-            step6: {
-                title: 'Tudo pronto! 🎉',
-                subtitle: 'Revise os detalhes do seu perfil',
-                labels: {
-                    name: 'Nome',
-                    email: 'E-mail',
-                    country: 'País',
-                    language: 'Idioma',
-                    allergies: 'Alergias',
-                    preferences: 'Preferências',
-                    goals: 'Objetivos'
-                },
-                complete: 'Concluir configuração'
-            },
-            continue: 'Continuar',
-            header: {
-                title: 'Crie seu perfil',
-                step: 'Passo'
-            }
-        },
-        lists: {
-            allergens: [
-                'Glúten', 'Leite', 'Ovos', 'Peixe', 'Crustáceos',
-                'Nozes', 'Amendoim', 'Trigo', 'Soja', 'Gergelim'
-            ],
-            dietaryPreferences: [
-                'Vegano', 'Vegetariano', 'Sem glúten', 'Sem laticínios', 'Orgânico',
-                'Baixo açúcar', 'Baixo sódio', 'Rica em proteínas', 'Keto', 'Paleo'
-            ],
-            healthGoals: [
-                'Perder peso', 'Ganhar músculo', 'Manter peso', 'Melhorar energia',
-                'Melhor digestão', 'Saúde do coração', 'Controlar diabetes', 'Reducir colesterol'
-            ]
-        },
-        home: {
-            greeting: 'Olá',
-            readyMessage: 'Pronto para fazer escolhas saudáveis?',
-            scanProduct: 'Escanear produto',
-            recentScans: 'Escaneamentos recentes',
-            viewAll: 'Ver tudo',
-            dailySummary: 'Resumo diário',
-            calories: 'Calorias',
-            protein: 'Proteína',
-            carbs: 'Carboidratos',
-            fat: 'Gorduras',
-            quickActions: 'Ações rápidas',
-            smartPicks: 'Escolhas inteligentes',
-            forYou: 'Para você',
-            community: 'Comunidade',
-            topRated: 'Mais bem avaliados',
-            recommended: 'Recomendado para você',
-            dailyTip: 'Dica diária',
-            tipContent: 'Lendo rótulos nutricionais? Concentre-se primeiro no tamanho da porção para calcular com precisão sua ingestão.',
-            status: {
-                suitable: 'Adequado',
-                questionable: 'Questionável',
-                notRecommended: 'Não recomendado',
-                unknown: 'Desconhecido'
-            }
-        },
-        stats: {
-            title: 'Estatísticas',
-            detailedStats: 'Estatísticas detalhadas',
-            insights: 'Informações sobre sua saúde',
-            scoreEvolution: 'Evolução da pontuação',
-            topBrands: 'Ranking de marcas',
-            currentScore: 'Pontuação atual',
-            totalScans: 'Total de escaneamentos',
-            favorites: 'Favoritos',
-            weeklyOverview: 'Visão geral semanal',
-            nutritionScore: 'Pontuação nutricional',
-            scannedProducts: 'Produtos escaneados',
-            healthyChoices: 'Escolhas saudáveis',
-            trend: 'tendência de pontuação'
-        },
-        profile: {
-            title: 'Perfil',
-            personalInfo: 'Informações pessoais',
-            dietaryNeeds: 'Necessidades dietéticas',
-            appSettings: 'Configurações do aplicativo',
-            editProfile: 'Editar perfil',
-            signOut: 'Sair'
-        },
-        search: {
-            title: 'Buscar produtos',
-            subtitle: 'Encontre e compare produtos',
-            placeholder: 'Buscar por nome, marca ou categoria...',
-            categories: 'Categorias',
-            filterByStatus: 'Filtrar por status',
-            selected: 'selecionado(s)',
-            clearFilters: 'Limpar filtros',
-            noResults: 'Nenhum produto encontrado',
-            tryAdjusting: 'Tente ajustar sua busca ou filtros',
-            found: 'produto(s) encontrado(s)',
-            statusLabels: {
-                safe: 'Seguro',
-                caution: 'Cuidado',
-                avoid: 'Evitar'
-            }
-        },
-        history: {
-            title: 'Histórico',
-            scannedCount: 'produtos escaneados',
-            tabs: {
-                products: 'Histórico de produtos',
-                comparisons: 'Comparações'
-            },
-            noHistory: 'Ainda não há histórico',
-            startScanning: 'Comece a escanear para construir seu histórico',
-            noComparisons: 'Ainda não há comparações',
-            compareHint: 'Compare produtos para fazer melhores escolhas',
-            viewComparison: 'Toque para ver detalhes',
-            time: {
-                justNow: 'Agora mesmo',
-                ago: 'h atrás',
-                yesterday: 'Ontem',
-                daysAgo: 'dias atrás'
-            }
-        },
-        favorites: {
-            title: 'Favoritos',
-            savedCount: 'produto(s) salvo(s)',
-            deleteHint: 'Arraste aqui para excluir',
-            releaseHint: 'Solte para excluir',
-            noFavorites: 'Ainda não há favoritos',
-            hint: 'Produtos que você marcar como favoritos aparecerão aqui',
-            dragHint: 'Arraste os itens para cima para excluí-los'
-        },
-        scanResult: {
-            status: {
-                suitable: {
-                    label: 'Adequado para você',
-                    description: 'Este produto corresponde ao seu perfil dietético e objetivos de saúde.'
-                },
-                questionable: {
-                    label: 'Revisão necessária',
-                    description: 'Este produto tem algumas preocupações. Verifique os detalhes abaixo.'
-                },
-                notRecommended: {
-                    label: 'Não recomendado',
-                    description: 'Este produto entra em conflito com seu perfil dietético.'
-                }
-            },
-            nutritionScore: 'Pontuação nutricional:',
-            analysis: {
-                title: 'Análise personalizada',
-                benefits: 'Benefícios',
-                concerns: 'Preocupações'
-            },
-            ingredients: 'Ingredientes',
-            allergens: 'Informação de alérgenos',
-            alternatives: {
-                title: 'Melhores alternativas',
-                seeAll: 'Ver tudo'
-            },
-            actions: {
-                scanAnother: 'Escanear outro',
-                compare: 'Comparar com outros produtos',
-                viewSimilar: 'Ver produtos similares'
-            },
-            compare: {
-                title: 'Comparar produtos',
-                subtitle: 'Escolha um produto do seu histórico para comparar com',
-                scanNew: 'Escanear novo produto',
-                scanNewDesc: 'Use a câmera para escanear outro produto',
-                orHistory: 'ou escolha do histórico'
-            }
-        },
-        settings: {
-            title: 'Configurações e Preferências',
-            profile: {
-                title: 'Informações do perfil',
-                name: 'Nome completo',
-                email: 'E-mail',
-                country: 'País',
-                selectCountry: 'Selecione o país',
-                language: 'Idioma',
-                selectLanguage: 'Selecione o idioma',
-                save: 'Salvar alterações',
-                savedSuccess: 'Perfil salvo com sucesso!'
-            },
-            dietary: {
-                title: 'Preferências dietéticas',
-                allergies: 'Gerenciar alergias',
-                preferences: 'Preferências de dieta'
-            },
-            app: {
-                title: 'Configurações do aplicativo',
-                notifications: 'Notificações',
-                darkMode: 'Modo escuro'
-            },
-            support: {
-                help: 'Ajuda e FAQ',
-                helpDesc: 'Obtenha ajuda e suporte'
             }
         }
     }
