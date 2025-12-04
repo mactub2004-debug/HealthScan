@@ -1,4 +1,4 @@
-# HealthScan - Complete Functional Specifications
+# Picko - Complete Functional Specifications
 
 ## Table of Contents
 1. [Global Specifications](#global-specifications)

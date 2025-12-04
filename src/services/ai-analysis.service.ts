@@ -234,15 +234,19 @@ export async function analyzeProductWithAI(
     }
 
     try {
-        console.log('🤖 Calling Mistral AI (mistral-tiny) for:', product.name);
+        const startTime = Date.now();
+        console.log('🤖 Calling Mistral AI (mistral-small-latest) for:', product.name);
         const prompt = generatePrompt(product, userProfile, language);
 
         const response = await client.chat.complete({
-            model: 'mistral-tiny',
+            model: 'mistral-small-latest',
             messages: [{ role: 'user', content: prompt }],
             maxTokens: 500,
             temperature: 0.2
         });
+
+        const endTime = Date.now();
+        console.log(`⏱️ AI analysis took ${endTime - startTime}ms`);
 
         let content = response.choices?.[0]?.message?.content;
 

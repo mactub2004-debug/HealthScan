@@ -21,9 +21,12 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
   }, []);
 
   const history = StorageService.getScanHistory();
-  // Use all history for stats to be consistent with StatsScreen
+  // Use all history for stats
   const scanCount = history.length;
-  const favoritesCount = history.filter(item => item.isFavorite).length;
+  // Count PURCHASED products with high score (>= 70) as healthy choices
+  const healthyChoicesCount = history.filter(item =>
+    item.isPurchased && item.product.nutritionScore && item.product.nutritionScore >= 70
+  ).length;
   const averageScore = scanCount > 0
     ? Math.round(history.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
     : 0;
@@ -40,13 +43,13 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
         date.setDate(date.getDate() - i);
         const dayName = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()] as keyof typeof t.common.days;
 
-        // Get scans from this day
+        // Get PURCHASED scans from this day only
         const dayScans = history.filter(item => {
           const scanDate = new Date(item.scannedAt);
-          return scanDate.toDateString() === date.toDateString();
+          return scanDate.toDateString() === date.toDateString() && item.isPurchased === true;
         });
 
-        // Calculate average score for this day
+        // Calculate average score for this day (only purchased products)
         let score = null;
         if (dayScans.length > 0) {
           score = Math.round(dayScans.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / dayScans.length);
@@ -67,7 +70,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
 
         const dayScans = history.filter(item => {
           const scanDate = new Date(item.scannedAt);
-          return scanDate.toDateString() === date.toDateString();
+          return scanDate.toDateString() === date.toDateString() && item.isPurchased === true;
         });
 
         let score = null;
@@ -191,7 +194,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
                 <p className="text-xs text-muted-foreground">{t.stats.nutritionScore}</p>
               </div>
               <div>
-                <p className="text-2xl mb-1">{favoritesCount}</p>
+                <p className="text-2xl mb-1">{healthyChoicesCount}</p>
                 <p className="text-xs text-muted-foreground">{t.stats.healthyChoices}</p>
               </div>
             </div>
@@ -201,16 +204,7 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
         {/* Score Evolution Chart - Clickable */}
         <div className="px-6 pb-6">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3>{t.stats.nutritionScore}</h3>
-              <button
-                onClick={() => onNavigate('stats')}
-                className="text-[#22C55E] hover:underline text-sm font-medium flex items-center gap-1"
-              >
-                {t.stats.detailedStats}
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            <h3 className="mb-4">{t.stats.nutritionScore}</h3>
 
             {/* Time Range Selector */}
             <div className="flex gap-2 mb-4">

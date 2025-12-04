@@ -27,15 +27,13 @@ export const translations = {
                 profile: 'Perfil'
             },
             days: {
+                sun: 'Dom',
                 mon: 'Lun',
                 tue: 'Mar',
-                jun: 'Jun',
-                jul: 'Jul',
-                aug: 'Ago',
-                sep: 'Sep',
-                oct: 'Oct',
-                nov: 'Nov',
-                dec: 'Dic'
+                wed: 'Mié',
+                thu: 'Jue',
+                fri: 'Vie',
+                sat: 'Sáb'
             },
             weekLabel: 'Semana',
             time: {
@@ -348,15 +346,13 @@ export const translations = {
                 profile: 'Profile'
             },
             days: {
+                sun: 'Sun',
                 mon: 'Mon',
                 tue: 'Tue',
-                jun: 'Jun',
-                jul: 'Jul',
-                aug: 'Aug',
-                sep: 'Sep',
-                oct: 'Oct',
-                nov: 'Nov',
-                dec: 'Dec'
+                wed: 'Wed',
+                thu: 'Thu',
+                fri: 'Fri',
+                sat: 'Sat'
             },
             weekLabel: 'Week',
             time: {

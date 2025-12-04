@@ -16,20 +16,34 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [scanHistory, setScanHistory] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
-
   const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Reload data when component mounts or refreshKey changes
   useEffect(() => {
     const profile = StorageService.getUserProfile();
     setUserProfile(profile);
     const history = StorageService.getScanHistory();
     setScanHistory(history);
 
-    // Load fresh products
+    // Load fresh products from ProductService (includes scanned versions with scores)
     const freshRecommended = profile
       ? ProductService.getRecommendedProducts(profile)
       : ProductService.getAllProducts().slice(0, 3);
     setRecommendedProducts(freshRecommended);
+
+    console.log('🏠 HomeScreen: Loaded', freshRecommended.length, 'recommended products');
+  }, [refreshKey]);
+
+  // Force refresh when screen becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Calculate real stats from ALL items
@@ -138,7 +152,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
                 {t.home.emptyState.description}
               </p>
               <button
-                onClick={() => onNavigate('scan')}
+                onClick={() => onNavigate('camera')}
                 className="w-full bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95"
               >
                 {t.home.scanProduct}

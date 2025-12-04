@@ -6,6 +6,7 @@ export const ProductService = {
      * Get all products for display, merging demo data with scan history.
      * If a product has been scanned, use the scanned version (with score/status)
      * instead of the static demo version.
+     * ALSO includes products that were scanned but are NOT in demo data.
      */
     getAllProducts: (): Product[] => {
         const history = StorageService.getScanHistory();
@@ -19,14 +20,32 @@ export const ProductService = {
             }
         });
 
+        // Track which demo product IDs we've processed
+        const demoProductIds = new Set(demoProducts.map(p => p.id));
+
         // Merge demo products with scanned data
-        return demoProducts.map(demoProduct => {
+        const merged = demoProducts.map(demoProduct => {
             const scannedVersion = scannedProductMap.get(demoProduct.id);
             if (scannedVersion && scannedVersion.nutritionScore !== undefined) {
                 return scannedVersion;
             }
             return demoProduct;
         });
+
+        // Add scanned products that are NOT in demo data (new products)
+        const newScannedProducts: Product[] = [];
+        scannedProductMap.forEach((product, id) => {
+            if (!demoProductIds.has(id) && product.nutritionScore !== undefined) {
+                newScannedProducts.push(product);
+            }
+        });
+
+        // Combine: scanned products first (most relevant), then demo products
+        const allProducts = [...newScannedProducts, ...merged];
+
+        console.log('📦 ProductService: Total products:', allProducts.length, '(', newScannedProducts.length, 'new scanned)');
+
+        return allProducts;
     },
 
     /**

@@ -1,7 +1,7 @@
-# HealthScan Design System
+# Picko Design System
 
 ## Overview
-HealthScan is a modern, minimalist food scanning mobile app with a focus on clean visuals, intuitive navigation, and health-conscious design.
+Picko is a modern, minimalist food scanning mobile app with a focus on clean visuals, intuitive navigation, and health-conscious design.
 
 ## Color Palette
 

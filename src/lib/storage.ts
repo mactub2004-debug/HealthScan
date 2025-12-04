@@ -2,8 +2,8 @@ import { UserProfile, ScanHistoryItem, Product, demoUserProfile, demoScanHistory
 export type { UserProfile };
 
 const KEYS = {
-  USER_PROFILE: 'healthscan_user_profile',
-  SCAN_HISTORY: 'healthscan_history',
+  USER_PROFILE: 'picko_user_profile',
+  SCAN_HISTORY: 'picko_history',
 };
 
 export const StorageService = {

@@ -12,7 +12,7 @@ import { ProfileScreen } from './components/screens/ProfileScreen';
 import { FavoritesScreen } from './components/screens/FavoritesScreen';
 import { ProductComparisonScreen } from './components/screens/ProductComparisonScreen';
 import { ShoppingListScreen } from './components/screens/ShoppingListScreen';
-import { StatsScreen } from './components/screens/StatsScreen';
+// StatsScreen removed - statistics now only shown in ProfileScreen
 import { WelcomeScreen } from './components/screens/WelcomeScreen';
 import { BottomNav } from './components/BottomNav';
 import { Product } from './lib/demo-data';
@@ -203,11 +203,7 @@ function AppContent() {
               </div>
             )}
 
-            {navigation.screen === 'stats' && (
-              <div key="stats-main">
-                <StatsScreen onBack={() => handleNavigate('profile')} />
-              </div>
-            )}
+            {/* StatsScreen removed - statistics now only shown in ProfileScreen */}
 
             {navigation.screen === 'settings' && (
               <div key="settings-main">

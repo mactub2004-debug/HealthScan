@@ -16,7 +16,7 @@ interface ScanResultScreenProps {
 }
 
 export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }: ScanResultScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [product, setProduct] = useState(initialProduct);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
@@ -199,8 +199,8 @@ export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }
             </div>
           </div>
 
-          {/* AI-Generated Description */}
-          {product.aiDescription && (
+          {/* AI-Generated Description or Loading Skeleton */}
+          {product.aiDescription ? (
             <div className="mt-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-10 h-10 rounded-full ${statusConfig.bg} flex items-center justify-center`}>
@@ -213,6 +213,23 @@ export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }
 
               <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 {renderMarkdown(product.aiDescription)}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center animate-pulse">
+                  <Sparkles className="w-5 h-5 text-gray-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-400">Analizando con IA...</h2>
+                  <p className="text-xs text-gray-400">Evaluando el producto para ti</p>
+                </div>
+              </div>
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
               </div>
             </div>
           )}
