@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { ProductCard } from '../ProductCard';
 import { demoProducts } from '../../lib/demo-data';
+import { ProductService } from '../../services/product.service';
 import { Button } from '../ui/button';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { analyzeProductWithAI } from '../../services/ai-analysis.service';
@@ -19,6 +20,13 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
+  const [scanHistory, setScanHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    const history = StorageService.getScanHistory();
+    setScanHistory(history);
+  }, []);
+
   // Map English categories to translated ones
   const categoryMap: Record<string, string> = {
     'Snacks': t.home.categories.snacks,
@@ -32,7 +40,9 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
   const translatedCategories = uniqueCategories.map(cat => categoryMap[cat] || cat);
   const categories = [t.home.viewAll, ...translatedCategories];
 
-  const filteredProducts = demoProducts.filter(product => {
+  const allProducts = ProductService.getAllProducts();
+
+  const filteredProducts = allProducts.filter(product => {
     const matchesSearch = searchQuery === '' ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,7 +78,7 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
       const userProfile = StorageService.getUserProfile();
 
       if (userProfile) {
-        // Analyze with AI
+        // Always analyze with AI to ensure personalized results for current user
         const aiResult = await analyzeProductWithAI(product, userProfile, language);
 
         // Merge AI results
@@ -83,6 +93,7 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
           allergens: aiResult.allergens || product.allergens
         };
 
+        // Navigate with fresh analysis (don't save to history)
         onNavigate('scan-result', { product: enrichedProduct });
       } else {
         // Fallback if no profile
@@ -140,8 +151,8 @@ export function SearchScreen({ onNavigate }: SearchScreenProps) {
                   key={category}
                   onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
                   className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                      ? 'bg-[#28C567] text-white'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-[#28C567] text-white'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   {category}

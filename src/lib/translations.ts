@@ -43,10 +43,10 @@ export const translations = {
             }
         },
         welcome: {
-            title: 'Sabe lo que comes',
-            subtitle: 'Análisis personalizado de alimentos.',
+            title: 'Tu asistente de compras inteligentes',
+            subtitle: 'Descubrí qué productos son realmente buenos para vos.',
             getStarted: 'Comenzar',
-            alreadyHaveAccount: '¿Ya usas HealthScan? ',
+            alreadyHaveAccount: '¿Ya usas Picko? ',
             signIn: 'Entrar',
             analyzing: 'Analizando...'
         },
@@ -364,10 +364,10 @@ export const translations = {
             }
         },
         welcome: {
-            title: 'Know what you eat',
-            subtitle: 'Personalized food analysis.',
+            title: 'Your smart shopping assistant',
+            subtitle: 'Discover which products are really good for you.',
             getStarted: 'Get Started',
-            alreadyHaveAccount: 'Already use HealthScan? ',
+            alreadyHaveAccount: 'Already use Picko? ',
             signIn: 'Sign In',
             analyzing: 'Analyzing...'
         },

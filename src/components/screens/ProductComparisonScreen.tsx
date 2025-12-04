@@ -1,4 +1,4 @@
-import { ChevronLeft, CheckCircle2, AlertTriangle, XCircle, ArrowRight, Plus } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, AlertTriangle, XCircle, ArrowRight, Plus, Scan } from 'lucide-react';
 import { Product } from '../../lib/demo-data';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -34,6 +34,13 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
           color: 'text-[#EF4444]',
           bg: 'bg-[#EF4444]',
           label: 'Not Recommended'
+        };
+      default:
+        return {
+          icon: AlertTriangle,
+          color: 'text-gray-500',
+          bg: 'bg-gray-500',
+          label: 'Unknown'
         };
     }
   };
@@ -95,16 +102,30 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
           })}
 
           {/* Add product button */}
-          {products.length < 3 && onAddProduct && (
-            <button
-              onClick={onAddProduct}
-              className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 hover:border-[#22C55E] transition-colors flex flex-col items-center justify-center gap-2 h-[232px] snap-center"
-            >
-              <div className="w-12 h-12 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
-                <Plus className="w-6 h-6 text-[#22C55E]" />
-              </div>
-              <p className="text-sm text-muted-foreground">Add Product</p>
-            </button>
+          {products.length < 3 && (
+            <div className="flex flex-col gap-2">
+              {onAddProduct && (
+                <button
+                  onClick={onAddProduct}
+                  className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 hover:border-[#22C55E] transition-colors flex flex-col items-center justify-center gap-2 h-[110px] snap-center"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
+                    <Plus className="w-4 h-4 text-[#22C55E]" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Select from History</p>
+                </button>
+              )}
+
+              <button
+                onClick={() => onNavigate('camera', { returnTo: 'comparison', currentProducts: products })}
+                className="flex-shrink-0 w-40 bg-white rounded-2xl overflow-hidden shadow-sm border-2 border-dashed border-gray-300 hover:border-[#22C55E] transition-colors flex flex-col items-center justify-center gap-2 h-[110px] snap-center"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#22C55E]/10 flex items-center justify-center">
+                  <Scan className="w-4 h-4 text-[#22C55E]" />
+                </div>
+                <p className="text-xs text-muted-foreground">Scan New</p>
+              </button>
+            </div>
           )}
         </div>
 
@@ -120,14 +141,14 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
                   <div className="flex-1 flex items-center gap-2">
                     <div className="flex-1 h-3 bg-secondary rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${product.nutritionScore >= 80 ? 'bg-[#22C55E]' :
-                          product.nutritionScore >= 60 ? 'bg-[#F97316]' :
+                        className={`h-full ${(product.nutritionScore || 0) >= 80 ? 'bg-[#22C55E]' :
+                          (product.nutritionScore || 0) >= 60 ? 'bg-[#F97316]' :
                             'bg-[#EF4444]'
                           }`}
-                        style={{ width: `${product.nutritionScore}%` }}
+                        style={{ width: `${product.nutritionScore || 0}%` }}
                       />
                     </div>
-                    <span className="text-sm w-10 text-right">{product.nutritionScore}</span>
+                    <span className="text-sm w-10 text-right">{product.nutritionScore ?? '?'}</span>
                   </div>
                 </div>
               ))}
@@ -223,7 +244,7 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
                   <h3 className="text-[#22C55E] mb-1">Best Choice</h3>
                   <p className="text-sm text-muted-foreground">
                     Based on your profile, <span className="text-foreground">{
-                      [...products].sort((a, b) => b.nutritionScore - a.nutritionScore)[0].name
+                      [...products].sort((a, b) => (b.nutritionScore || 0) - (a.nutritionScore || 0))[0].name
                     }</span> is the best option for you.
                   </p>
                 </div>
@@ -237,7 +258,7 @@ export function ProductComparisonScreen({ products, onNavigate, onBack, onAddPro
           <Button
             className="w-full h-14 bg-[#22C55E] text-white hover:bg-[#22C55E]/90 rounded-2xl shadow-md"
             onClick={() => onNavigate('scan-result', {
-              product: [...products].sort((a, b) => b.nutritionScore - a.nutritionScore)[0]
+              product: [...products].sort((a, b) => (b.nutritionScore || 0) - (a.nutritionScore || 0))[0]
             })}
           >
             View Best Product

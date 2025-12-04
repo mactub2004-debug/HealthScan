@@ -213,7 +213,7 @@ export function SettingsScreen({ onNavigate }: SettingsScreenProps) {
 
         {/* App Info */}
         <div className="px-6 pb-6 text-center">
-          <p className="text-sm text-muted-foreground">HealthScan v1.0.0</p>
+          <p className="text-sm text-muted-foreground">Picko v1.0.0</p>
         </div>
       </div>
 

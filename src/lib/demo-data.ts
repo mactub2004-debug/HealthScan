@@ -1,4 +1,4 @@
-// Demo data for HealthScan app
+// Demo data for Picko app
 
 export type SuitabilityStatus = 'suitable' | 'questionable' | 'not-recommended';
 
@@ -66,7 +66,7 @@ export const demoProducts: Product[] = [
     image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=400&fit=crop',
     category: 'Dairy Alternative',
     ingredients: ['Water', 'Organic Almonds', 'Sea Salt', 'Sunflower Lecithin'],
-    allergens: ['Tree Nuts'],
+    allergens: ['tree_nuts'],
     nutrition: {
       servingSize: '240ml',
       calories: 30,
@@ -86,7 +86,7 @@ export const demoProducts: Product[] = [
     image: 'https://images.unsplash.com/photo-1604480133435-4b5f9804c899?w=400&h=400&fit=crop',
     category: 'Snacks',
     ingredients: ['Peanuts', 'Whey Protein', 'Sugar', 'Palm Oil', 'Soy Lecithin'],
-    allergens: ['Peanuts', 'Milk', 'Soy'],
+    allergens: ['peanuts', 'milk', 'soy'],
     nutrition: {
       servingSize: '45g',
       calories: 210,
@@ -106,7 +106,7 @@ export const demoProducts: Product[] = [
     image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=400&fit=crop',
     category: 'Instant Food',
     ingredients: ['Wheat Flour', 'Palm Oil', 'Salt', 'MSG', 'Artificial Flavors'],
-    allergens: ['Wheat', 'Gluten'],
+    allergens: ['wheat', 'gluten'],
     nutrition: {
       servingSize: '85g',
       calories: 380,
@@ -126,7 +126,7 @@ export const demoProducts: Product[] = [
     image: 'https://images.unsplash.com/photo-1571212515674-3fdb992e2c08?w=400&h=400&fit=crop',
     category: 'Dairy',
     ingredients: ['Milk', 'Live Active Cultures'],
-    allergens: ['Milk'],
+    allergens: ['milk'],
     nutrition: {
       servingSize: '150g',
       calories: 90,

@@ -90,16 +90,32 @@ export const StorageService = {
     }
   },
 
-  togglePurchased: (historyId: string) => {
+  togglePurchased: (id: string) => {
     try {
       const history = StorageService.getScanHistory();
-      const updatedHistory = history.map(item =>
-        item.id === historyId ? { ...item, isPurchased: !item.isPurchased } : item
+      console.log('📦 Storage: Toggling purchased for ID:', id);
+      console.log('📦 Storage: Current history length:', history.length);
+
+      // Try to find by history ID first
+      let updatedHistory = history.map(item =>
+        item.id === id ? { ...item, isPurchased: !item.isPurchased } : item
       );
+
+      // Check if anything changed
+      const changed = JSON.stringify(history) !== JSON.stringify(updatedHistory);
+
+      if (!changed) {
+        console.log('📦 Storage: No change by ID, trying by Product ID...');
+        updatedHistory = history.map(item =>
+          item.product.id === id ? { ...item, isPurchased: !item.isPurchased } : item
+        );
+      }
+
+      console.log('📦 Storage: New history length:', updatedHistory.length);
       localStorage.setItem(KEYS.SCAN_HISTORY, JSON.stringify(updatedHistory));
       return updatedHistory;
     } catch (e) {
-      console.error('Error toggling purchased', e);
+      console.error('❌ Storage: Error toggling purchased', e);
       return [];
     }
   },
@@ -113,6 +129,44 @@ export const StorageService = {
     } catch (e) {
       console.error('Error deleting history item', e);
       return [];
+    }
+  },
+
+  // Update product data in all history items (e.g., after AI analysis)
+  updateProductInHistory: (productId: string, updatedProduct: Product) => {
+    try {
+      const history = StorageService.getScanHistory();
+      const updatedHistory = history.map(item =>
+        item.product.id === productId ? { ...item, product: updatedProduct } : item
+      );
+      localStorage.setItem(KEYS.SCAN_HISTORY, JSON.stringify(updatedHistory));
+      console.log(`✅ Updated product ${productId} in ${updatedHistory.filter(i => i.product.id === productId).length} history items`);
+      return updatedHistory;
+    } catch (e) {
+      console.error('Error updating product in history', e);
+      return [];
+    }
+  },
+
+  clearScanHistory: () => {
+    try {
+      localStorage.removeItem(KEYS.SCAN_HISTORY);
+    } catch (e) {
+      console.error('Error clearing scan history', e);
+    }
+  },
+
+  clearAll: () => {
+    StorageService.clearUserProfile();
+    StorageService.clearScanHistory();
+    // Clear AI analysis cache to prevent cross-user contamination
+    if (typeof window !== 'undefined') {
+      try {
+        const { clearAnalysisCache } = require('../services/ai-analysis.service');
+        clearAnalysisCache();
+      } catch (e) {
+        console.log('Could not clear analysis cache');
+      }
     }
   },
 

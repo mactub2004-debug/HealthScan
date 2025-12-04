@@ -15,34 +15,75 @@ interface ScanResultScreenProps {
   onBack: () => void;
 }
 
-export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScreenProps) {
+export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }: ScanResultScreenProps) {
   const { t } = useLanguage();
+  const [product, setProduct] = useState(initialProduct);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [showComparisonDialog, setShowComparisonDialog] = useState(false);
 
   useEffect(() => {
-    // Save to history when screen loads
-    const newItem = StorageService.addScanHistoryItem(product);
-    if (newItem) {
+    // Scroll to top when screen loads
+    window.scrollTo(0, 0);
+
+    // Update product state when initial product changes
+    setProduct(initialProduct);
+
+    // Check if product is in favorites or purchased
+    const history = StorageService.getScanHistory();
+    const historyItem = history.find(item => item.product.id === initialProduct.id);
+    if (historyItem) {
+      setCurrentHistoryId(historyItem.id);
+      setIsFavorite(historyItem.isFavorite || false);
+      setIsPurchased(historyItem.isPurchased || false);
+      // Update product with latest data from history (including AI results)
+      if (historyItem.product.nutritionScore !== undefined) {
+        setProduct(historyItem.product);
+      }
+    }
+
+    // Poll for updates from background AI analysis
+    const pollInterval = setInterval(() => {
+      const updatedHistory = StorageService.getScanHistory();
+      const updatedItem = updatedHistory.find(item => item.product.id === initialProduct.id);
+      if (updatedItem && updatedItem.product.nutritionScore !== undefined && updatedItem.product.nutritionScore !== product.nutritionScore) {
+        console.log('📊 Updating product with AI results:', updatedItem.product.nutritionScore);
+        setProduct(updatedItem.product);
+        clearInterval(pollInterval);
+      }
+    }, 500);
+
+    return () => clearInterval(pollInterval);
+  }, [initialProduct]);
+
+  const handleTogglePurchased = () => {
+    console.log('🛒 Toggling purchased for product:', product.id);
+
+    // First, ensure product is in history
+    let history = StorageService.getScanHistory();
+    let historyItem = history.find(item => item.product.id === product.id);
+
+    if (!historyItem) {
+      console.log('🛒 Product not in history, adding it first...');
+      // Add to history if not exists
+      const newItem = StorageService.addScanHistoryItem(product, false);
+      if (!newItem) {
+        console.error('🛒 Failed to add product to history');
+        return;
+      }
+      historyItem = newItem;
       setCurrentHistoryId(newItem.id);
     }
 
-    // Check if product is already in favorites or purchased
-    const history = StorageService.getScanHistory();
-    const historyItem = history.find(item => item.product.id === product.id);
-    if (historyItem) {
-      setIsFavorite(historyItem.isFavorite || false);
-      setIsPurchased(historyItem.isPurchased || false);
-    }
-  }, [product]);
+    // Now toggle purchased using the history ID
+    const updatedHistory = StorageService.togglePurchased(historyItem.id);
+    console.log('🛒 Updated history length:', updatedHistory.length);
 
-  const handleTogglePurchased = () => {
-    if (currentHistoryId) {
-      StorageService.togglePurchased(currentHistoryId);
-      setIsPurchased(!isPurchased);
-    }
+    // Update local state
+    const isNowPurchased = updatedHistory.some(item => item.product.id === product.id && item.isPurchased);
+    console.log('🛒 New purchased state:', isNowPurchased);
+    setIsPurchased(isNowPurchased);
   };
 
   const getStatusConfig = (status?: Product['status']) => {
@@ -137,8 +178,8 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="max-w-md mx-auto px-6 -mt-2">
+        {/* Product Info - Added margin top for spacing */}
+        <div className="max-w-md mx-auto px-6 mt-4">
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-in slide-in-from-bottom-8 duration-500">
             <ImageWithFallback
               src={product.image}
@@ -167,7 +208,6 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">{t.scanResult.analysis.title}</h2>
-                  <p className="text-xs text-muted-foreground">{t.scanResult.analysis.subtitle}</p>
                 </div>
               </div>
 
@@ -269,7 +309,7 @@ export function ScanResultScreen({ product, onNavigate, onBack }: ScanResultScre
           <div className="mt-6 mb-6 space-y-3">
             <Button
               className="w-full h-14 bg-[#22C55E] text-white hover:bg-[#22C55E]/90 rounded-2xl shadow-md"
-              onClick={onBack}
+              onClick={() => onNavigate('camera')}
             >
               <Camera className="w-5 h-5 mr-2" />
               {t.scanResult.actions.scanAnother}

@@ -50,13 +50,13 @@ function AppContent() {
     setIsLoading(false);
   }, []);
 
-  const handleNavigate = (screen: MainScreen, data?: any) => {
+  const handleNavigate = (screen: string, data?: any) => {
     // Save current state to history if navigating to detail screens
     if (screen === 'scan-result' || screen === 'camera' || screen === 'comparison') {
       setNavigationHistory([...navigationHistory, navigation]);
     }
 
-    setNavigation({ screen, data });
+    setNavigation({ screen: screen as MainScreen, data });
   };
 
   const handleBack = () => {
@@ -70,7 +70,7 @@ function AppContent() {
   };
 
   const handleLogout = () => {
-    StorageService.clearUserProfile();
+    StorageService.clearAll();
     setAppFlow('language');
     setNavigation({ screen: 'home' });
     setNavigationHistory([]);
@@ -124,6 +124,7 @@ function AppContent() {
             <CameraScreen
               onNavigate={handleNavigate}
               onClose={handleBack}
+              context={navigation.data}
             />
           </div>
         )}
@@ -139,12 +140,14 @@ function AppContent() {
 
         {/* Product Comparison Screen */}
         {navigation.screen === 'comparison' && navigation.data?.products && (
-          <ProductComparisonScreen
-            products={navigation.data.products}
-            onNavigate={handleNavigate}
-            onBack={handleBack}
-            onAddProduct={() => handleNavigate('camera')}
-          />
+          <div className="fixed inset-0 z-50 bg-background animate-in fade-in slide-in-from-bottom duration-300 overflow-y-auto">
+            <ProductComparisonScreen
+              products={navigation.data.products}
+              onNavigate={handleNavigate}
+              onBack={handleBack}
+              onAddProduct={() => handleNavigate('camera', { returnTo: 'comparison', currentProducts: navigation.data?.products })}
+            />
+          </div>
         )}
 
         {/* Main screens with bottom navigation */}

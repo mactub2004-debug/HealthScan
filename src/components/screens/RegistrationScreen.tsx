@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { countries } from '../../lib/demo-data';
 import { StorageService } from '../../lib/storage';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { clearAnalysisCache } from '../../services/ai-analysis.service';
 
 interface RegistrationScreenProps {
   onComplete: () => void;
@@ -338,6 +339,8 @@ export function RegistrationScreen({ onComplete }: RegistrationScreenProps) {
             <Button
               onClick={() => {
                 StorageService.saveUserProfile(formData);
+                StorageService.clearScanHistory(); // Ensure fresh start for new user
+                clearAnalysisCache(); // Clear AI cache for new user profile
                 onComplete();
               }}
               className="w-full h-14 bg-[#22C55E] text-white hover:bg-[#22C55E]/90 rounded-2xl shadow-md"

@@ -3,10 +3,13 @@ import { Product } from '../lib/demo-data';
 import { UserProfile } from '../lib/storage';
 import { Language } from '../lib/translations';
 
-const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
+const apiKey = '35CzGfsu0lapN9CyB6rZ1ziTYLfVoY7e'; // HARDCODED TEST
+
+console.log('🔑 API Key loaded:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NOT FOUND');
+console.log('🔍 All env vars:', import.meta.env);
 
 if (!apiKey) {
-    console.warn('⚠️ VITE_MISTRAL_API_KEY not found. AI analysis will use fallback mode.');
+    console.error('❌ VITE_MISTRAL_API_KEY not found in environment variables!');
 }
 
 const client = apiKey ? new Mistral({ apiKey }) : null;
@@ -126,85 +129,119 @@ const AI_PROMPTS = {
 const analysisCache = new Map<string, AIAnalysisResult>();
 
 /**
- * Generate AI prompt in the specified language - Optimized for speed
+ * Clear the analysis cache (call when user logs out or changes)
+ */
+export function clearAnalysisCache() {
+    analysisCache.clear();
+    console.log('🧹 Analysis cache cleared');
+}
+
+// Expose to window for debugging
+if (typeof window !== 'undefined') {
+    (window as any).clearAICache = clearAnalysisCache;
+}
+
+/**
+ * Generate cache key based on product and complete user profile
+ */
+function generateCacheKey(productId: string, userProfile: UserProfile, language: Language): string {
+    // Include ALL user profile data to ensure personalized analysis
+    const profileHash = [
+        userProfile.allergies.sort().join(','),
+        userProfile.preferences.sort().join(','),
+        userProfile.goals.sort().join(',')
+    ].join('|');
+
+    return `${productId}-${language}-${profileHash}`;
+}
+
+/**
+ * Generate AI prompt in the specified language - OPTIMIZED FOR TOKEN EFFICIENCY
  */
 function generatePrompt(product: any, userProfile: UserProfile, language: Language): string {
-    const t = AI_PROMPTS[language];
+    const nutrition = product.nutrition || { servingSize: 'N/A', calories: 0, sugar: 0, sodium: 0, protein: 0, fiber: 0, fat: 0 };
 
-    // Language-specific prompt templates - Optimized for brevity
-    const promptTemplates = {
-        ES: {
-            analyze: 'Analiza este producto para:',
-            criticalInstruction: 'SI contiene alérgenos del usuario: status="not-recommended", score=10. SIN EXCEPCIONES.',
-            concise: 'Sé MUY CONCISO. Frases cortas y directas. Sin relleno.'
-        },
-        EN: {
-            analyze: 'Analyze this product for:',
-            criticalInstruction: 'IF contains user allergens: status="not-recommended", score=10. NO EXCEPTIONS.',
-            concise: 'Be VERY CONCISE. Short, direct sentences. No filler.'
-        }
-    };
+    // Ultra-compact prompt to minimize tokens
+    const prompt = language === 'ES' ?
+        `Eres nutricionista. Analiza para: ${userProfile.goals.join(', ') || 'salud general'}. Alergias: ${userProfile.allergies.join(', ') || 'ninguna'}.
 
-    const template = promptTemplates[language];
+Producto: ${product.name} (${product.brand})
+Ingredientes: ${product.ingredients?.join(', ') || 'N/A'}
+Alérgenos: ${product.allergens?.join(', ') || 'ninguno'}
+Nutrición/${nutrition.servingSize}: ${nutrition.calories}kcal, Prot:${nutrition.protein}g, Carbs:${nutrition.carbs}g, Azúcar:${nutrition.sugar}g, Grasa:${nutrition.fat}g, Sodio:${nutrition.sodium}mg, Fibra:${nutrition.fiber}g
 
-    // Safe access to nutrition
-    const nutrition = product.nutrition || { servingSize: 'N/A', calories: 0, sugar: 0, sodium: 0, protein: 0, fiber: 0 };
+REGLAS:
+- Si tiene alérgenos del usuario → status: "not-recommended"
+- aiDescription: 2 oraciones conversacionales SIN números. NO menciones el nombre del producto. Menciona qué tipo de producto es, por qué es bueno/malo para sus objetivos, consejo práctico.
+- benefits/issues: lenguaje simple (ej: "Rico en proteína", "Mucha sal")
 
-    // Compact prompt to save tokens and processing time
-    return `Role: Strict Nutritionist.
-Task: ${template.analyze}
-User: ${userProfile.allergies.join(',') || 'None'} (Allergies), ${userProfile.goals.join(',') || 'None'} (Goals).
+JSON (sin markdown):
+{
+  "status": "suitable|questionable|not-recommended",
+  "nutritionScore": 0-100,
+  "benefits": ["beneficio 1", "beneficio 2"],
+  "issues": ["problema 1", "problema 2"],
+  "aiDescription": "Tu recomendación amigable en 2 oraciones",
+  "ingredients": ["traducido 1", "traducido 2"],
+  "allergens": ["traducido 1"]
+}`
+        :
+        `You're a nutritionist. Analyze for: ${userProfile.goals.join(', ') || 'general health'}. Allergies: ${userProfile.allergies.join(', ') || 'none'}.
 
 Product: ${product.name} (${product.brand})
-Ing: ${product.ingredients?.join(',') || ''}
-Nutri: ${nutrition.calories}kcal, Sug:${nutrition.sugar}g, Sod:${nutrition.sodium}mg, Prot:${nutrition.protein}g, Fib:${nutrition.fiber}g.
+Ingredients: ${product.ingredients?.join(', ') || 'N/A'}
+Allergens: ${product.allergens?.join(', ') || 'none'}
+Nutrition/${nutrition.servingSize}: ${nutrition.calories}kcal, Prot:${nutrition.protein}g, Carbs:${nutrition.carbs}g, Sugar:${nutrition.sugar}g, Fat:${nutrition.fat}g, Sodium:${nutrition.sodium}mg, Fiber:${nutrition.fiber}g
 
 RULES:
-1. ${template.criticalInstruction}
-2. ${template.concise}
-3. Translate ingredients to ${language === 'ES' ? 'Spanish' : 'English'}.
-4. NO Markdown in JSON values.
+- If has user allergens → status: "not-recommended"
+- aiDescription: 2 conversational sentences NO numbers. DO NOT mention the product name. Mention what type of product it is, why good/bad for their goals, practical advice.
+- benefits/issues: simple language (e.g., "High protein", "Lots of salt")
 
-Response JSON format:
+JSON (no markdown):
 {
-  "status": "suitable"|"questionable"|"not-recommended",
+  "status": "suitable|questionable|not-recommended",
   "nutritionScore": 0-100,
-  "benefits": ["short benefit 1", "short benefit 2"],
-  "issues": ["short issue 1", "short issue 2"],
-  "aiDescription": "Very short personalized summary (max 2 sentences).",
+  "benefits": ["benefit 1", "benefit 2"],
+  "issues": ["issue 1", "issue 2"],
+  "aiDescription": "Your friendly recommendation in 2 sentences",
   "ingredients": ["translated 1", "translated 2"],
   "allergens": ["translated 1"]
 }`;
+
+    return prompt;
 }
 
 /**
  * Analyze a product using Mistral AI based on user profile and language
+ * NO FALLBACK - AI ONLY MODE
  */
 export async function analyzeProductWithAI(
     product: any,
     userProfile: UserProfile,
     language: Language = 'ES'
 ): Promise<AIAnalysisResult> {
-    // 1. Check Cache
-    const cacheKey = `${product.id}-${language}-${userProfile.allergies.join(',')}`;
+    // 1. Check Cache with complete user profile
+    const cacheKey = generateCacheKey(product.id, userProfile, language);
     if (analysisCache.has(cacheKey)) {
-        console.log('Returning cached analysis for:', product.name);
+        console.log('✅ Returning cached analysis for:', product.name);
         return analysisCache.get(cacheKey)!;
     }
 
-    // Fallback mode if no API key
+    // FORCE AI MODE - No fallback allowed
     if (!client) {
-        return getFallbackAnalysis(product, userProfile, language);
+        throw new Error('❌ Mistral API key not configured. AI analysis is required.');
     }
 
     try {
+        console.log('🤖 Calling Mistral AI (mistral-tiny) for:', product.name);
         const prompt = generatePrompt(product, userProfile, language);
 
         const response = await client.chat.complete({
-            model: 'mistral-large-latest',
+            model: 'mistral-tiny',
             messages: [{ role: 'user', content: prompt }],
-            maxTokens: 500, // Limit response length for speed
-            temperature: 0.1 // Low temperature for consistent, direct answers
+            maxTokens: 500,
+            temperature: 0.2
         });
 
         let content = response.choices?.[0]?.message?.content;
@@ -223,17 +260,30 @@ export async function analyzeProductWithAI(
         const result = JSON.parse(jsonMatch[0]);
 
         // Validate response
-        if (!result.status || !result.nutritionScore) {
+        if (!result.status || result.nutritionScore === undefined) {
             throw new Error('Incomplete AI response');
         }
+
+        console.log('✅ AI analysis successful:', result.nutritionScore);
 
         // 2. Save to Cache
         analysisCache.set(cacheKey, result);
 
         return result;
-    } catch (error) {
-        console.error('Error analyzing product with AI:', error);
-        return getFallbackAnalysis(product, userProfile, language);
+    } catch (error: any) {
+        console.error('❌ Error analyzing product with AI:', error);
+
+        // Check specific error types
+        if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+            throw new Error('❌ API Key inválida. Verifica tu VITE_MISTRAL_API_KEY en .env');
+        }
+
+        if (error?.message?.includes('429') || error?.message?.includes('rate') || error?.message?.includes('capacity exceeded')) {
+            throw new Error('⚠️ Límite de API alcanzado. Espera unos minutos e intenta de nuevo.');
+        }
+
+        // Re-throw the error - NO FALLBACK
+        throw error;
     }
 }
 

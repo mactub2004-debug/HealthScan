@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scan, Sparkles, Users, Lightbulb, TrendingUp, Loader2 } from 'lucide-react';
 import { demoProducts } from '../../lib/demo-data';
+import { ProductService } from '../../services/product.service';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { StorageService, UserProfile } from '../../lib/storage';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -16,22 +17,26 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
   const [scanHistory, setScanHistory] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState<string | null>(null);
 
+  const [recommendedProducts, setRecommendedProducts] = useState<any[]>([]);
+
   useEffect(() => {
     const profile = StorageService.getUserProfile();
     setUserProfile(profile);
     const history = StorageService.getScanHistory();
     setScanHistory(history);
+
+    // Load fresh products
+    const freshRecommended = profile
+      ? ProductService.getRecommendedProducts(profile)
+      : ProductService.getAllProducts().slice(0, 3);
+    setRecommendedProducts(freshRecommended);
   }, []);
 
-  // Calculate real stats from purchased items only
-  const purchasedItems = scanHistory.filter(item => item.isPurchased);
-  const scanCount = purchasedItems.length;
+  // Calculate real stats from ALL items
+  const scanCount = scanHistory.length;
   const averageScore = scanCount > 0
-    ? Math.round(purchasedItems.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
+    ? Math.round(scanHistory.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
     : 0;
-
-  // Get recommended products (just taking first 3 as demo since status is dynamic)
-  const recommendedProducts = demoProducts.slice(0, 3);
 
   const getStatusConfig = (status?: string) => {
     switch (status) {
@@ -86,6 +91,7 @@ export function HomeScreen({ onNavigate }: HomeScreenProps) {
           allergens: aiResult.allergens || product.allergens
         };
 
+        // Navigate with fresh analysis (don't save to history - only camera scans are saved)
         onNavigate('scan-result', { product: enrichedProduct });
       } else {
         onNavigate('scan-result', { product });

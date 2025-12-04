@@ -54,7 +54,7 @@ export function ComparisonDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>{t.scanResult.compare.title}</DialogTitle>
                     <DialogDescription>
@@ -62,7 +62,7 @@ export function ComparisonDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-3 mt-4">
+                <div className="space-y-3 mt-4 max-h-[60vh] overflow-y-auto">
                     {/* Option to scan new product */}
                     <button
                         onClick={onScanNew}

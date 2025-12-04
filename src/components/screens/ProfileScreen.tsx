@@ -1,8 +1,10 @@
 import { ChevronRight, User, Globe, Languages, Shield, Bell, Heart, LogOut, History } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { demoUserProfile } from '../../lib/demo-data';
 import { StorageService } from '../../lib/storage';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Badge } from '../ui/badge';
 
 interface ProfileScreenProps {
   onNavigate: (screen: string, data?: any) => void;
@@ -10,52 +12,77 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const userProfile = StorageService.getUserProfile() || demoUserProfile;
+  const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const history = StorageService.getScanHistory();
-  // Only count purchased items for real statistics
-  const purchasedItems = history.filter(item => item.isPurchased);
-  const scanCount = purchasedItems.length;
+  // Use all history for stats to be consistent with StatsScreen
+  const scanCount = history.length;
   const favoritesCount = history.filter(item => item.isFavorite).length;
   const averageScore = scanCount > 0
-    ? Math.round(purchasedItems.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
+    ? Math.round(history.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / scanCount)
     : 0;
 
-  // Generate real score evolution data from last 7 days of purchased items
+  // Generate real score evolution data based on timeRange
   const generateScoreData = () => {
     const today = new Date();
-    const last7Days: Date[] = [];
+    const data: { day: string; score: number | null }[] = [];
 
-    // Create array of last 7 days
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      last7Days.push(date);
+    if (timeRange === 'week') {
+      // Last 7 days
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dayName = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()] as keyof typeof t.common.days;
+
+        // Get scans from this day
+        const dayScans = history.filter(item => {
+          const scanDate = new Date(item.scannedAt);
+          return scanDate.toDateString() === date.toDateString();
+        });
+
+        // Calculate average score for this day
+        let score = null;
+        if (dayScans.length > 0) {
+          score = Math.round(dayScans.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / dayScans.length);
+        }
+
+        data.push({
+          day: t.common.days[dayName],
+          score: score
+        });
+      }
+    } else {
+      // Last 30 days - Daily view
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        // Show day number and month for context
+        const dayLabel = date.toLocaleDateString(language === 'ES' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' });
+
+        const dayScans = history.filter(item => {
+          const scanDate = new Date(item.scannedAt);
+          return scanDate.toDateString() === date.toDateString();
+        });
+
+        let score = null;
+        if (dayScans.length > 0) {
+          score = Math.round(dayScans.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / dayScans.length);
+        }
+
+        data.push({
+          day: dayLabel,
+          score: score
+        });
+      }
     }
 
-    // Map to day labels and calculate average scores
-    return last7Days.map((date) => {
-      const dayName = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getDay()] as keyof typeof t.common.days;
-
-      // Get scans from this day
-      const dayScans = purchasedItems.filter(item => {
-        const scanDate = new Date(item.scannedAt);
-        return scanDate.toDateString() === date.toDateString();
-      });
-
-      // Calculate average score for this day
-      let score = 0;
-      if (dayScans.length > 0) {
-        score = Math.round(dayScans.reduce((acc, item) => acc + (item.product.nutritionScore || 0), 0) / dayScans.length);
-      }
-
-      return {
-        day: t.common.days[dayName],
-        score: score || (scanCount > 0 ? averageScore : 0) // Use average if no specific data
-      };
-    });
+    return data;
   };
 
   const scoreData = generateScoreData();
@@ -173,13 +200,40 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
 
         {/* Score Evolution Chart - Clickable */}
         <div className="px-6 pb-6">
-          <button
-            onClick={() => onNavigate('stats')}
-            className="w-full bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-all text-left"
-          >
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <h3>{t.stats.nutritionScore}</h3>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <button
+                onClick={() => onNavigate('stats')}
+                className="text-[#22C55E] hover:underline text-sm font-medium flex items-center gap-1"
+              >
+                {t.stats.detailedStats}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Time Range Selector */}
+            <div className="flex gap-2 mb-4">
+              <Badge
+                variant={timeRange === 'week' ? 'default' : 'outline'}
+                className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all text-xs ${timeRange === 'week'
+                  ? 'bg-[#22C55E] text-white hover:bg-[#22C55E]/90'
+                  : 'hover:border-[#22C55E]/50'
+                  }`}
+                onClick={() => setTimeRange('week')}
+              >
+                {t.common.week}
+              </Badge>
+              <Badge
+                variant={timeRange === 'month' ? 'default' : 'outline'}
+                className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all text-xs ${timeRange === 'month'
+                  ? 'bg-[#22C55E] text-white hover:bg-[#22C55E]/90'
+                  : 'hover:border-[#22C55E]/50'
+                  }`}
+                onClick={() => setTimeRange('month')}
+              >
+                {t.common.month}
+              </Badge>
             </div>
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={scoreData} margin={{ left: -10, right: 10, top: 5, bottom: 5 }}>
@@ -187,12 +241,13 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
                 <XAxis
                   dataKey="day"
                   stroke="#94a3b8"
-                  style={{ fontSize: '11px' }}
+                  style={{ fontSize: '10px' }}
+                  interval={timeRange === 'month' ? 4 : 0}
                 />
                 <YAxis
                   stroke="#94a3b8"
                   style={{ fontSize: '11px' }}
-                  domain={[60, 100]}
+                  domain={[0, 100]}
                   width={35}
                 />
                 <Tooltip
@@ -207,16 +262,17 @@ export function ProfileScreen({ onNavigate, onLogout }: ProfileScreenProps) {
                   type="monotone"
                   dataKey="score"
                   stroke="#22C55E"
-                  strokeWidth={3}
+                  strokeWidth={2.5}
                   dot={{ fill: '#22C55E', r: 3 }}
                   activeDot={{ r: 5 }}
+                  connectNulls
                 />
               </LineChart>
             </ResponsiveContainer>
             <p className="text-xs text-muted-foreground text-center mt-3">
-              {t.stats.detailedStats}
+              {timeRange === 'week' ? t.stats.weeklyOverview : `${t.common.month} - ${t.stats.trend}`}
             </p>
-          </button>
+          </div>
         </div>
 
         {/* Logout Button */}

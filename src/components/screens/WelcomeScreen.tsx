@@ -61,7 +61,7 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                 </div>
             </div>
 
-            {/* Main Content: Aligned to bottom (justify-end) with increased padding (pb-24) as requested */}
+            {/* Main Content: Aligned to bottom with balanced spacing */}
             <main className="flex-grow flex flex-col items-center justify-end px-6 pb-24 w-full max-w-md mx-auto">
 
                 {/* Logo Group & Brand */}
@@ -69,56 +69,48 @@ export function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
-                    className="flex flex-col items-center mb-8"
+                    className="flex flex-col items-center mb-10"
                 >
-                    {/* Scaled down Logo (SVG Recreation) */}
-                    <div className="w-24 h-24 mb-2 text-[#28C567]">
-                        <svg viewBox="0 0 100 100" fill="currentColor" className="drop-shadow-sm">
-                            {/* Apple Body shape */}
-                            <path d="M50 90 C 20 90, 10 60, 10 45 C 10 25, 30 20, 40 30 C 45 35, 55 35, 60 30 C 70 20, 90 25, 90 45 C 90 60, 80 90, 50 90 Z" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                            {/* Leaf */}
-                            <path d="M50 25 Q 55 5, 75 10 Q 60 25, 50 25" fill="currentColor" />
-                            {/* Stem */}
-                            <path d="M50 25 Q 45 15, 42 12" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-
-                            {/* Fork Illusion */}
-                            <path d="M42 45 L 42 60 Q 42 70, 50 70 Q 58 70, 58 60 L 58 45" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-                            <path d="M50 65 L 50 42" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-                            <path d="M50 70 L 50 82" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
-                        </svg>
+                    {/* Picko Logo - Slightly smaller for better balance */}
+                    <div className="w-28 h-28 mb-5 flex items-center justify-center">
+                        <img
+                            src="/src/assets/picko-logo.png"
+                            alt="Picko Logo"
+                            className="w-full h-full object-contain drop-shadow-lg"
+                        />
                     </div>
 
-                    {/* Brand Name - Constructing it visually */}
-                    <h1 className="text-4xl font-bold tracking-tight text-[#228B49]">
-                        Health<span className="text-[#28C567]">Scan</span>
+                    {/* Brand Name */}
+                    <h1 className="text-5xl font-bold tracking-tight text-[#28C567]">
+                        Picko
                     </h1>
                 </motion.div>
 
-                {/* Text Content */}
+                {/* Text Content - Increased spacing for symmetry */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
-                    className="text-center space-y-2 mb-10"
+                    className="text-center space-y-3 mb-12"
                 >
                     <h2 className="text-2xl font-semibold text-gray-900">
                         {t.welcome.title}
                     </h2>
-                    <p className="text-gray-500 text-base max-w-[260px] mx-auto leading-relaxed">
+                    <p className="text-gray-500 text-base max-w-[280px] mx-auto leading-relaxed">
                         {t.welcome.subtitle}
                     </p>
                 </motion.div>
 
-                {/* Action Area */}
+                {/* Action Area - Centered button with consistent width */}
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.5 }}
-                    className="w-full space-y-6"
+                    className="w-full flex justify-center"
                 >
                     <button
                         onClick={onGetStarted}
-                        className="w-full max-w-[280px] mx-auto bg-[#28C567] hover:bg-[#23ad5a] active:scale-[0.98] transition-all text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 text-lg flex items-center justify-center"
+                        className="w-full max-w-[300px] bg-[#28C567] hover:bg-[#23ad5a] active:scale-[0.98] transition-all text-white font-bold py-4 rounded-xl shadow-lg shadow-green-200 text-lg"
                     >
                         {t.welcome.getStarted}
                     </button>

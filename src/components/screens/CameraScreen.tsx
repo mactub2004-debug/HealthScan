@@ -9,9 +9,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 interface CameraScreenProps {
   onNavigate: (screen: string, data?: any) => void;
   onClose: () => void;
+  context?: any;
 }
 
-export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
+export function CameraScreen({ onNavigate, onClose, context }: CameraScreenProps) {
   const { language } = useLanguage();
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [scanMode, setScanMode] = useState<'camera' | 'barcode'>('barcode');
@@ -94,38 +95,45 @@ export function CameraScreen({ onNavigate, onClose }: CameraScreenProps) {
       navigator.vibrate(200);
     }
 
-    // Get user profile and analyze with AI in the current language
-    const userProfile = StorageService.getUserProfile();
-    if (userProfile) {
-      try {
-        console.log(`🤖 Analyzing product in ${language}...`);
-        const aiResult = await analyzeProductWithAI(product, userProfile, language);
+    // Add basic product to history immediately
+    StorageService.addScanHistoryItem(product, false);
 
-        // Merge AI results with product
-        const enrichedProduct = {
-          ...product,
-          status: aiResult.status,
-          nutritionScore: aiResult.nutritionScore,
-          benefits: aiResult.benefits,
-          issues: aiResult.issues,
-          aiDescription: aiResult.aiDescription,
-          ingredients: aiResult.ingredients || product.ingredients,
-          allergens: aiResult.allergens || product.allergens
-        };
-
-        // Navigate with enriched product
-        onNavigate('scan-result', { product: enrichedProduct });
-      } catch (error) {
-        console.error('AI analysis failed, using basic product:', error);
-        // Navigate with basic product if AI fails
-        onNavigate('scan-result', { product });
-      }
+    // Navigate IMMEDIATELY with basic product (no AI yet)
+    if (context?.returnTo === 'comparison' && context.currentProducts) {
+      const updatedProducts = [...context.currentProducts, product];
+      onNavigate('comparison', { products: updatedProducts });
     } else {
-      // No user profile, navigate with basic product
       onNavigate('scan-result', { product });
     }
 
     setIsAnalyzing(false);
+
+    // Analyze with AI in BACKGROUND (non-blocking)
+    const userProfile = StorageService.getUserProfile();
+    if (userProfile) {
+      console.log(`🤖 Analyzing product in background...`);
+      analyzeProductWithAI(product, userProfile, language)
+        .then(aiResult => {
+          // Merge AI results with product
+          const enrichedProduct = {
+            ...product,
+            status: aiResult.status,
+            nutritionScore: aiResult.nutritionScore,
+            benefits: aiResult.benefits,
+            issues: aiResult.issues,
+            aiDescription: aiResult.aiDescription,
+            ingredients: aiResult.ingredients || product.ingredients,
+            allergens: aiResult.allergens || product.allergens
+          };
+
+          // Update in history
+          StorageService.updateProductInHistory(product.id, enrichedProduct);
+          console.log('✅ AI analysis completed in background');
+        })
+        .catch(error => {
+          console.error('Background AI analysis failed:', error);
+        });
+    }
   };
 
   const handleScanError = (err: Error) => {

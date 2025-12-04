@@ -70,6 +70,9 @@ export function HistoryScreen({ onNavigate }: HistoryScreenProps) {
           allergens: aiResult.allergens || product.allergens
         };
 
+        // Update product in history with AI results
+        StorageService.updateProductInHistory(product.id, enrichedProduct);
+
         onNavigate('scan-result', { product: enrichedProduct });
       } else {
         onNavigate('scan-result', { product });
