@@ -163,17 +163,18 @@ function generatePrompt(product: any, userProfile: UserProfile, language: Langua
 
     // Ultra-compact prompt to minimize tokens
     const prompt = language === 'ES' ?
-        `Eres nutricionista. Analiza para: ${userProfile.goals.join(', ') || 'salud general'}. Alergias: ${userProfile.allergies.join(', ') || 'ninguna'}.
+        `Eres nutricionista. Analiza para: ${userProfile.goals.join(', ') || 'salud general'}. Alergias: ${userProfile.allergies.join(', ') || 'ninguna'}. Preferencias: ${userProfile.preferences.join(', ') || 'ninguna'}.
 
 Producto: ${product.name} (${product.brand})
 Ingredientes: ${product.ingredients?.join(', ') || 'N/A'}
 Alérgenos: ${product.allergens?.join(', ') || 'ninguno'}
 Nutrición/${nutrition.servingSize}: ${nutrition.calories}kcal, Prot:${nutrition.protein}g, Carbs:${nutrition.carbs}g, Azúcar:${nutrition.sugar}g, Grasa:${nutrition.fat}g, Sodio:${nutrition.sodium}mg, Fibra:${nutrition.fiber}g
 
-REGLAS:
-- Si tiene alérgenos del usuario → status: "not-recommended"
-- aiDescription: 2 oraciones conversacionales SIN números. NO menciones el nombre del producto. Menciona qué tipo de producto es, por qué es bueno/malo para sus objetivos, consejo práctico.
-- benefits/issues: lenguaje simple (ej: "Rico en proteína", "Mucha sal")
+REGLAS CRÍTICAS:
+1. Si tiene alérgenos del usuario O viola su dieta (ej: vegano comiendo carne) → status: "not-recommended" Y nutritionScore: MÁXIMO 30.
+2. Si status es "suitable", nutritionScore debe ser > 50.
+3. aiDescription: 2 oraciones conversacionales SIN números. NO menciones el nombre del producto. Di qué es, si sirve para sus objetivos y un tip.
+4. benefits/issues: lenguaje simple (ej: "Rico en proteína", "Mucha sal").
 
 JSON (sin markdown):
 {
@@ -186,17 +187,18 @@ JSON (sin markdown):
   "allergens": ["traducido 1"]
 }`
         :
-        `You're a nutritionist. Analyze for: ${userProfile.goals.join(', ') || 'general health'}. Allergies: ${userProfile.allergies.join(', ') || 'none'}.
+        `You're a nutritionist. Analyze for: ${userProfile.goals.join(', ') || 'general health'}. Allergies: ${userProfile.allergies.join(', ') || 'none'}. Preferences: ${userProfile.preferences.join(', ') || 'none'}.
 
 Product: ${product.name} (${product.brand})
 Ingredients: ${product.ingredients?.join(', ') || 'N/A'}
 Allergens: ${product.allergens?.join(', ') || 'none'}
 Nutrition/${nutrition.servingSize}: ${nutrition.calories}kcal, Prot:${nutrition.protein}g, Carbs:${nutrition.carbs}g, Sugar:${nutrition.sugar}g, Fat:${nutrition.fat}g, Sodium:${nutrition.sodium}mg, Fiber:${nutrition.fiber}g
 
-RULES:
-- If has user allergens → status: "not-recommended"
-- aiDescription: 2 conversational sentences NO numbers. DO NOT mention the product name. Mention what type of product it is, why good/bad for their goals, practical advice.
-- benefits/issues: simple language (e.g., "High protein", "Lots of salt")
+CRITICAL RULES:
+1. If has user allergens OR violates diet (e.g. vegan eating meat) → status: "not-recommended" AND nutritionScore: MAX 30.
+2. If status is "suitable", nutritionScore must be > 50.
+3. aiDescription: 2 conversational sentences NO numbers. DO NOT mention product name. Say what it is, if good for goals, and a tip.
+4. benefits/issues: simple language (e.g., "High protein", "Lots of salt").
 
 JSON (no markdown):
 {
@@ -211,11 +213,6 @@ JSON (no markdown):
 
     return prompt;
 }
-
-/**
- * Analyze a product using Mistral AI based on user profile and language
- * NO FALLBACK - AI ONLY MODE
- */
 export async function analyzeProductWithAI(
     product: any,
     userProfile: UserProfile,
@@ -246,7 +243,7 @@ export async function analyzeProductWithAI(
         });
 
         const endTime = Date.now();
-        console.log(`⏱️ AI analysis took ${endTime - startTime}ms`);
+        console.log(`⏱️ AI analysis took ${endTime - startTime} ms`);
 
         let content = response.choices?.[0]?.message?.content;
 
@@ -298,13 +295,13 @@ const FALLBACK_MESSAGES = {
     ES: {
         containsAllergens: 'Contiene alérgenos',
         notRecommendedAllergies: 'No recomendado debido a tus alergias',
-        allergenWarning: (allergens: string) => `Este producto contiene ${allergens}, que está en tu lista de alergias. No es seguro para ti consumirlo.`,
-        highSugar: (amount: number) => `Alto contenido de azúcar (${amount}g)`,
+        allergenWarning: (allergens: string) => `Este producto contiene ${allergens}, que está en tu lista de alergias.No es seguro para ti consumirlo.`,
+        highSugar: (amount: number) => `Alto contenido de azúcar(${amount}g)`,
         lowSugar: 'Bajo en azúcar',
-        highSodium: (amount: number) => `Alto contenido de sodio (${amount}mg)`,
+        highSodium: (amount: number) => `Alto contenido de sodio(${amount}mg)`,
         lowSodium: 'Bajo en sodio',
-        goodProtein: (amount: number) => `Buena fuente de proteína (${amount}g)`,
-        highFiber: (amount: number) => `Alto en fibra (${amount}g)`,
+        goodProtein: (amount: number) => `Buena fuente de proteína(${amount}g)`,
+        highFiber: (amount: number) => `Alto en fibra(${amount}g)`,
         standardProduct: 'Producto procesado estándar',
         moderateConsumption: 'Consumir con moderación',
         scoreDescription: (score: number, issue: string) =>

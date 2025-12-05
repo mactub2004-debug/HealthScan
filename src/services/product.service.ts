@@ -35,7 +35,7 @@ export const ProductService = {
         // Add scanned products that are NOT in demo data (new products)
         const newScannedProducts: Product[] = [];
         scannedProductMap.forEach((product, id) => {
-            if (!demoProductIds.has(id) && product.nutritionScore !== undefined) {
+            if (!demoProductIds.has(id)) {
                 newScannedProducts.push(product);
             }
         });
@@ -55,50 +55,46 @@ export const ProductService = {
      * 2. PRIORITIZE products matching goals (simple heuristics).
      */
     getRecommendedProducts: (userProfile: UserProfile): Product[] => {
-        const allProducts = ProductService.getAllProducts(); // Get products with scores if available
+        const allProducts = ProductService.getAllProducts();
 
         // Map user allergen names to technical IDs
         const allergenMap: Record<string, string> = {
-            'Milk': 'milk',
-            'Leche': 'milk',
-            'Peanuts': 'peanuts',
-            'Maní': 'peanuts',
-            'Cacahuates': 'peanuts',
+            'Milk': 'milk', 'Leche': 'milk',
+            'Peanuts': 'peanuts', 'Maní': 'peanuts', 'Cacahuates': 'peanuts',
             'Gluten': 'gluten',
-            'Soy': 'soy',
-            'Soja': 'soy',
-            'Tree Nuts': 'tree_nuts',
-            'Frutos secos': 'tree_nuts',
-            'Wheat': 'wheat',
-            'Trigo': 'wheat',
-            'Eggs': 'eggs',
-            'Huevos': 'eggs',
-            'Fish': 'fish',
-            'Pescado': 'fish',
-            'Shellfish': 'shellfish',
-            'Mariscos': 'shellfish'
+            'Soy': 'soy', 'Soja': 'soy',
+            'Tree Nuts': 'tree_nuts', 'Frutos secos': 'tree_nuts',
+            'Wheat': 'wheat', 'Trigo': 'wheat',
+            'Eggs': 'eggs', 'Huevos': 'eggs',
+            'Fish': 'fish', 'Pescado': 'fish',
+            'Shellfish': 'shellfish', 'Mariscos': 'shellfish'
         };
 
-        // 1. Filter out allergens (STRICT)
-        let safeProducts = allProducts.filter(product => {
-            // If product has no allergens, it's safe
+        // Helper to check safety
+        const isSafe = (product: Product) => {
             if (!product.allergens || product.allergens.length === 0) return true;
-
-            // Check if ANY of the user's allergies match ANY of the product's allergens
-            const hasAllergen = userProfile.allergies.some(userAllergen => {
+            return !userProfile.allergies.some(userAllergen => {
                 const normalizedUserAllergen = allergenMap[userAllergen] || userAllergen.toLowerCase();
-
-                return product.allergens.some(productAllergen => {
-                    const normalizedProductAllergen = productAllergen.toLowerCase();
-                    return normalizedProductAllergen === normalizedUserAllergen;
-                });
+                return product.allergens!.some(productAllergen =>
+                    productAllergen.toLowerCase() === normalizedUserAllergen
+                );
             });
+        };
 
-            return !hasAllergen;
-        });
+        // 1. Always include SCANNED products (so user can see what they scanned, even if not recommended)
+        // Identify scanned products by checking if they are NOT in the original demo set OR if they have a score (modified)
+        const scannedProducts = allProducts.filter(p => !demoProducts.find(dp => dp.id === p.id) || p.nutritionScore !== undefined);
 
-        // 2. Score based on goals (Simple Heuristic)
-        const scoredProducts = safeProducts.map(product => {
+        // 2. Filter DEMO products for safety (recommendations should be safe)
+        const safeDemoProducts = demoProducts.filter(p =>
+            !scannedProducts.find(sp => sp.id === p.id) && isSafe(p)
+        );
+
+        // Combine: Scanned first, then safe recommendations
+        const combined = [...scannedProducts, ...safeDemoProducts];
+
+        // 3. Score based on goals (Simple Heuristic)
+        const scoredProducts = combined.map(product => {
             let score = 0;
 
             // Goal: Muscle Gain -> High Protein

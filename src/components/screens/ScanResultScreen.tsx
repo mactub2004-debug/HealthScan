@@ -8,6 +8,7 @@ import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { useState, useEffect } from 'react';
 import { ComparisonDialog } from '../ComparisonDialog';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { analyzeProductWithAI } from '../../services/ai-analysis.service';
 
 interface ScanResultScreenProps {
   product: Product;
@@ -23,6 +24,8 @@ export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [showComparisonDialog, setShowComparisonDialog] = useState(false);
 
+
+
   useEffect(() => {
     // Scroll to top when screen loads
     window.scrollTo(0, 0);
@@ -33,6 +36,7 @@ export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }
     // Check if product is in favorites or purchased
     const history = StorageService.getScanHistory();
     const historyItem = history.find(item => item.product.id === initialProduct.id);
+
     if (historyItem) {
       setCurrentHistoryId(historyItem.id);
       setIsFavorite(historyItem.isFavorite || false);
@@ -41,18 +45,55 @@ export function ScanResultScreen({ product: initialProduct, onNavigate, onBack }
       if (historyItem.product.nutritionScore !== undefined) {
         setProduct(historyItem.product);
       }
+    } else {
+      // Product NOT in history (e.g. clicked from Home/Search demo items)
+      // We must add it to history and analyze it if it doesn't have a score
+      if (initialProduct.nutritionScore === undefined) {
+        console.log('🚀 New product detected, adding to history and analyzing...');
+
+        // 1. Add to history immediately
+        StorageService.addScanHistoryItem(initialProduct, false);
+
+        // 2. Start AI Analysis
+        const userProfile = StorageService.getUserProfile();
+        if (userProfile) {
+          analyzeProductWithAI(initialProduct, userProfile, language)
+            .then(aiResult => {
+              console.log('✅ Analysis complete, updating history:', aiResult.nutritionScore);
+
+              const enrichedProduct = {
+                ...initialProduct,
+                status: aiResult.status,
+                nutritionScore: aiResult.nutritionScore,
+                benefits: aiResult.benefits,
+                issues: aiResult.issues,
+                aiDescription: aiResult.aiDescription,
+                ingredients: aiResult.ingredients || initialProduct.ingredients,
+                allergens: aiResult.allergens || initialProduct.allergens
+              };
+
+              // Update in history
+              StorageService.updateProductInHistory(initialProduct.id, enrichedProduct);
+
+              // Update local state
+              setProduct(enrichedProduct);
+            })
+            .catch(err => console.error('❌ Analysis failed:', err));
+        }
+      }
     }
 
-    // Poll for updates from background AI analysis
+    // Poll for updates from background AI analysis (in case it was started by CameraScreen)
     const pollInterval = setInterval(() => {
       const updatedHistory = StorageService.getScanHistory();
       const updatedItem = updatedHistory.find(item => item.product.id === initialProduct.id);
-      if (updatedItem && updatedItem.product.nutritionScore !== undefined && updatedItem.product.nutritionScore !== product.nutritionScore) {
-        console.log('📊 Updating product with AI results:', updatedItem.product.nutritionScore);
+
+      // Only update if we found a better version (with score) and our current one doesn't have it
+      if (updatedItem && updatedItem.product.nutritionScore !== undefined && product.nutritionScore === undefined) {
+        console.log('📊 Polling found updated product:', updatedItem.product.nutritionScore);
         setProduct(updatedItem.product);
-        clearInterval(pollInterval);
       }
-    }, 500);
+    }, 1000); // Slower polling is fine now that we handle direct analysis
 
     return () => clearInterval(pollInterval);
   }, [initialProduct]);
